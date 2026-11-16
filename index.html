@@ -1,0 +1,2058 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YRME Aircon & Refrigeration - Interactive Showroom Kiosk</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <style>
+    /* Custom Scrollbar for Touch Displays */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #0ea5e9;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #38bdf8;
+    }
+    
+    /* Smooth Touch Scrolling */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Pulse Glow Animation */
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 15px rgba(14, 165, 233, 0.4); }
+      50% { box-shadow: 0 0 30px rgba(14, 165, 233, 0.8); }
+    }
+    .glow-effect {
+      animation: pulse-glow 3s infinite;
+    }
+
+    /* TV / kiosk layout: keep the catalog dense on wide, short displays. */
+    @media (min-width: 1200px) and (max-height: 900px) {
+      body {
+        font-size: 15px;
+      }
+
+      header {
+        padding: 0.5rem 1.5rem;
+        gap: 1rem;
+      }
+
+      header nav {
+        gap: 0.375rem;
+      }
+
+      header nav button {
+        padding: 0.55rem 0.8rem;
+        font-size: 0.875rem;
+      }
+
+      main {
+        padding: 1rem 1.5rem;
+      }
+
+      #tab-catalog {
+        gap: 1rem;
+      }
+
+      #tab-catalog > div:first-child {
+        padding: 0.75rem 1rem;
+        gap: 0.5rem;
+      }
+
+      #brand-filters,
+      #type-filters {
+        gap: 0.375rem;
+      }
+
+      #brand-filters button {
+        padding: 0.4rem 0.75rem;
+      }
+
+      #type-filters {
+        padding-top: 0.5rem;
+      }
+
+      #type-filters button {
+        padding: 0.3rem 0.65rem;
+      }
+
+      #product-grid {
+        gap: 1rem;
+      }
+
+      #product-grid > div {
+        border-radius: 1rem;
+      }
+
+      #product-grid > div > div:first-child > div:first-child {
+        height: 8.5rem;
+      }
+
+      #product-grid > div .p-6 {
+        padding: 0.9rem;
+      }
+
+      #product-grid > div .space-y-4 {
+        gap: 0.5rem;
+      }
+
+      #product-grid > div h3 {
+        font-size: 1rem;
+        line-height: 1.25rem;
+      }
+
+      #product-grid > div .text-2xl {
+        font-size: 1.25rem;
+      }
+
+      #product-grid > div .py-2\.5 {
+        padding-top: 0.4rem;
+        padding-bottom: 0.4rem;
+      }
+    }
+
+    @media (max-width: 900px) {
+      header {
+        flex-wrap: wrap;
+        padding: 0.75rem 1rem;
+      }
+
+      header nav {
+        order: 3;
+        width: 100%;
+        overflow-x: auto;
+        padding-bottom: 0.125rem;
+      }
+
+      header nav button {
+        flex: 0 0 auto;
+      }
+
+      main {
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans antialiased select-none overflow-x-hidden min-h-screen flex flex-col justify-between">
+
+  <!-- IDLE OVERLAY SLIDESHOW (Auto-triggers after 30s of inactivity & loops through features) -->
+  <section id="idle-slideshow" onclick="resetIdleTimer()" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950 transition-opacity duration-700 opacity-0 pointer-events-none cursor-pointer">
+    <div id="slideshow-bg" class="absolute inset-0 bg-cover bg-center transition-all duration-1000 scale-105" style="background-image: url('https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=1920&q=80');">
+      <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/70 to-slate-950/40"></div>
+    </div>
+
+    <div class="relative z-10 w-full max-w-6xl mx-auto px-12 py-10 text-center flex flex-col items-center">
+      <div class="flex items-center gap-4 mb-10">
+        <div class="w-16 h-16 bg-cyan-500 rounded-2xl flex items-center justify-center text-slate-950 font-black text-3xl shadow-lg shadow-cyan-500/50">
+          YR
+        </div>
+        <div class="text-left">
+          <h1 class="text-3xl md:text-4xl font-extrabold tracking-wider text-white">YRME AIRCON SERVICES</h1>
+          <p class="text-cyan-400 font-medium text-lg md:text-xl">Sales • Installation • Repair • Maintenance</p>
+        </div>
+      </div>
+
+      <div class="max-w-5xl">
+        <span class="inline-block px-6 py-2 rounded-full bg-cyan-500/20 border border-cyan-400/40 text-cyan-300 text-lg font-bold tracking-widest uppercase mb-6 backdrop-blur-md">
+          AUTHORIZED DEALER & SERVICE CENTER
+        </span>
+        <h2 id="slideshow-title" class="text-5xl md:text-6xl lg:text-7xl font-black text-white leading-tight mb-6 drop-shadow-2xl transition-all duration-500">
+          Premium Inverter Air Conditioning Units
+        </h2>
+        <p id="slideshow-desc" class="text-xl md:text-2xl text-slate-300 max-w-3xl mx-auto mb-10 font-medium leading-relaxed transition-all duration-500">
+          Save up to 60% on electricity costs with top brands like Daikin, Carrier, LG, Panasonic & TCL. Available in stock now!
+        </p>
+
+        <div class="flex flex-wrap justify-center gap-6">
+          <button onclick="goHome()" class="px-10 py-5 rounded-2xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-black text-2xl active:scale-95 transition shadow-2xl shadow-cyan-500/40 flex items-center gap-3">
+            <span>Explore All Brands</span>
+            <i data-lucide="arrow-right" class="w-7 h-7"></i>
+          </button>
+          <button onclick="switchTab('services')" class="px-10 py-5 rounded-2xl bg-slate-800/90 hover:bg-slate-700 text-white font-bold text-2xl active:scale-95 transition border border-slate-600 flex items-center gap-3 backdrop-blur-md">
+            <span>YRME Cleaning & Repairs</span>
+            <i data-lucide="wrench" class="w-7 h-7 text-cyan-400"></i>
+          </button>
+        </div>
+
+        <div class="mt-14 text-cyan-400/90 text-lg font-semibold flex items-center justify-center gap-3 animate-pulse">
+          <i data-lucide="hand" class="w-6 h-6"></i>
+          <span>Touch anywhere on screen to start interactive mode</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-4 z-20" id="slideshow-dots">
+      <div class="w-12 h-3 bg-cyan-400 rounded-full transition-all duration-300" id="dot-0"></div>
+      <div class="w-3 h-3 bg-slate-700 rounded-full transition-all duration-300" id="dot-1"></div>
+      <div class="w-3 h-3 bg-slate-700 rounded-full transition-all duration-300" id="dot-2"></div>
+    </div>
+  </section>
+
+
+  <!-- ULTRA-COMPACT HEADER WITH HOME BUTTON -->
+  <header class="sticky top-0 z-40 bg-slate-900/95 backdrop-blur border-b border-slate-800 px-6 py-2.5 flex items-center justify-between">
+    <!-- Brand Logo & Name (Acts as Home Trigger) -->
+    <div class="flex items-center space-x-3 cursor-pointer" onclick="goHome()">
+      <div class="w-9 h-9 bg-cyan-500 rounded-xl flex items-center justify-center text-slate-950 font-black text-lg shadow-md shadow-cyan-500/30">
+        YR
+      </div>
+      <div>
+        <h1 class="text-lg font-black tracking-tight text-white flex items-center gap-2">
+          YRME <span class="text-cyan-400 text-xs font-semibold uppercase tracking-widest bg-cyan-950 border border-cyan-800 px-2 py-0.5 rounded-md">Aircon Showroom</span>
+        </h1>
+      </div>
+    </div>
+
+    <!-- Main Navigation Tabs including Home Screen Button -->
+    <nav class="flex items-center gap-2">
+      <!-- Dedicated Home Screen Button -->
+      <!-- <button onclick="goHome()" id="nav-home" class="px-5 py-2 rounded-lg font-bold text-base transition flex items-center gap-2 bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700">
+        <i data-lucide="home" class="w-5 h-5 text-cyan-400"></i>
+        Home
+      </button> -->
+
+      <button onclick="switchTab('catalog')" id="nav-catalog" class="px-5 py-2 rounded-lg font-bold text-base transition flex items-center gap-2 bg-cyan-500 text-slate-950 shadow-lg shadow-cyan-500/20">
+        <i data-lucide="snowflake" class="w-5 h-5"></i>
+        Aircon Models
+      </button>
+
+      <button onclick="switchTab('services')" id="nav-services" class="px-5 py-2 rounded-lg font-bold text-base transition flex items-center gap-2 bg-slate-800 text-slate-300 hover:bg-slate-700">
+        <i data-lucide="wrench" class="w-5 h-5"></i>
+        Our Services
+      </button>
+
+      <button onclick="switchTab('calculator')" id="nav-calculator" class="px-5 py-2 rounded-lg font-bold text-base transition flex items-center gap-2 bg-slate-800 text-slate-300 hover:bg-slate-700">
+        <i data-lucide="calculator" class="w-5 h-5"></i>
+        Cooling Estimator
+      </button>
+    </nav>
+
+    <!-- Compare Drawer Trigger -->
+    <div class="flex items-center gap-3">
+      <button onclick="toggleCompareModal()" id="compare-btn" class="relative px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg font-semibold flex items-center gap-2 text-sm">
+        <i data-lucide="sliders-horizontal" class="w-4 h-4 text-cyan-400"></i>
+        Compare (<span id="compare-count">0</span>)
+      </button>
+    </div>
+  </header>
+
+
+  <!-- MAIN CONTENT CONTAINER -->
+  <main class="flex-grow p-6 max-w-[1920px] mx-auto w-full">
+
+    <!-- CATALOG TAB CONTENT (Default Home View) -->
+    <section id="tab-catalog" class="space-y-6">
+      
+      <!-- BRAND QUICK FILTERS (Large Touch Targets) -->
+      <div class="bg-slate-900/80 border border-slate-800 p-4 rounded-2xl shadow-xl space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-extrabold uppercase tracking-widest text-cyan-400 flex items-center gap-2">
+            <i data-lucide="award" class="w-4 h-4"></i> Explore Brands & Categories
+          </span>
+          <span class="text-xs text-slate-400" id="product-count-label">Showing all units</span>
+        </div>
+        
+        <!-- Brand Filter Buttons -->
+        <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1" id="brand-filters">
+          <!-- Populated dynamically by JS -->
+        </div>
+
+        <!-- Secondary Type Filters -->
+        <div class="flex items-center gap-2 border-t border-slate-800/80 pt-3 overflow-x-auto no-scrollbar" id="type-filters">
+          <!-- Populated dynamically by JS -->
+        </div>
+      </div>
+
+      <!-- PRODUCT SHOWCASE GRID -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="product-grid">
+        <!-- Aircon Product Cards Populated via JavaScript -->
+      </div>
+    </section>
+
+    <!-- SERVICES TAB CONTENT -->
+    <section id="tab-services" class="hidden space-y-6">
+      <div class="bg-gradient-to-r from-cyan-950/40 via-slate-900 to-slate-900 p-8 rounded-3xl border border-cyan-500/20 shadow-2xl">
+        <h2 class="text-3xl font-black text-white mb-2">YRME Air Conditioning & Refrigeration Services</h2>
+        <p class="text-slate-300 text-lg">Professional, reliable, and guaranteed aircon solutions for home, commercial, and industrial clients.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="services-grid">
+        <!-- Service Cards Populated via JS -->
+      </div>
+    </section>
+
+    <!-- CALCULATOR TAB CONTENT -->
+    <section id="tab-calculator" class="hidden space-y-6">
+      <div class="bg-slate-900 border border-slate-800 p-8 rounded-3xl shadow-2xl max-w-4xl mx-auto space-y-8">
+        <div class="text-center space-y-2">
+          <span class="px-3 py-1 bg-cyan-500/20 text-cyan-300 font-bold text-xs uppercase tracking-wider rounded-full border border-cyan-400/30">
+            Interactive Room Estimator
+          </span>
+          <h2 class="text-3xl font-black text-white">Find the Ideal Aircon Horsepower (HP) for Your Room</h2>
+          <p class="text-slate-400 text-base">Drag the slider below to set your room area in square meters ($m^2$).</p>
+        </div>
+
+        <!-- Slider Control -->
+        <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800 space-y-6">
+          <div class="flex justify-between items-center">
+            <span class="text-slate-300 font-bold text-lg">Room Area:</span>
+            <span class="text-4xl font-black text-cyan-400" id="area-display">20 sq.m</span>
+          </div>
+          <input type="range" min="8" max="70" value="20" id="area-slider" class="w-full h-4 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400" oninput="updateCalculator(this.value)">
+          <div class="flex justify-between text-xs font-semibold text-slate-500">
+            <span>8 sq.m (Small Bedroom)</span>
+            <span>30 sq.m (Living Room)</span>
+            <span>70+ sq.m (Commercial Hall)</span>
+          </div>
+        </div>
+
+        <!-- Recommendation Output -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
+          <div class="bg-slate-950 border border-cyan-500/30 p-6 rounded-2xl text-center space-y-2">
+            <span class="text-slate-400 text-sm font-semibold uppercase">Recommended HP</span>
+            <div class="text-3xl font-black text-cyan-400" id="rec-hp">1.0 HP</div>
+            <p class="text-xs text-slate-400" id="rec-hp-sub">Optimal for efficient cooling</p>
+          </div>
+
+          <div class="bg-slate-950 border border-slate-800 p-6 rounded-2xl text-center space-y-2">
+            <span class="text-slate-400 text-sm font-semibold uppercase">Est. Unit Price Range</span>
+            <div class="text-2xl font-extrabold text-white" id="rec-price">₱18,000 - ₱26,000</div>
+            <p class="text-xs text-slate-400">Depending on Brand & Inverter</p>
+          </div>
+
+          <div class="bg-slate-950 border border-slate-800 p-6 rounded-2xl text-center space-y-2">
+            <span class="text-slate-400 text-sm font-semibold uppercase">Inverter Energy Savings</span>
+            <div class="text-2xl font-extrabold text-emerald-400">Up to 60% Off</div>
+            <p class="text-xs text-slate-400">Compared to Non-Inverter units</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+
+  <!-- PRODUCT DETAILS MODAL -->
+  <div id="product-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-6">
+    <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-3xl w-full p-8 shadow-2xl relative space-y-6 max-h-[90vh] overflow-y-auto">
+      <button onclick="closeProductModal()" class="absolute top-6 right-6 text-slate-400 hover:text-white p-2 rounded-full bg-slate-800">
+        <i data-lucide="x" class="w-6 h-6"></i>
+      </button>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center" id="modal-content">
+        <!-- Populated via JS -->
+      </div>
+    </div>
+  </div>
+
+
+  <!-- COMPARE MODAL -->
+  <div id="compare-modal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md hidden flex items-center justify-center p-6">
+    <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-5xl w-full p-8 shadow-2xl relative space-y-6 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-4">
+        <h3 class="text-2xl font-black text-white flex items-center gap-3">
+          <i data-lucide="sliders-horizontal" class="w-6 h-6 text-cyan-400"></i> Side-by-Side Model Comparison
+        </h3>
+        <button onclick="toggleCompareModal()" class="text-slate-400 hover:text-white p-2 rounded-full bg-slate-800">
+          <i data-lucide="x" class="w-6 h-6"></i>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="compare-cards">
+        <!-- Populated via JS -->
+      </div>
+    </div>
+  </div>
+
+
+  <!-- 
+    ===================================================================
+    FUTURE USE: CONTACT & BOOKING MODAL (COMMENTED OUT FOR OFFICE USE)
+    ===================================================================
+    <div id="booking-modal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md hidden flex items-center justify-center p-6">
+      <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-lg w-full p-8 shadow-2xl relative space-y-6">
+        <button onclick="closeBookingModal()" class="absolute top-6 right-6 text-slate-400 hover:text-white p-2 rounded-full bg-slate-800">
+          <i data-lucide="x" class="w-6 h-6"></i>
+        </button>
+        <h3 class="text-2xl font-black text-white">Book a Service or Inquire</h3>
+        <p class="text-slate-300 text-sm">Please talk directly to our showroom attendant or enter your contact details below.</p>
+        <form class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Your Name</label>
+            <input type="text" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-cyan-400" placeholder="e.g. Juan Dela Cruz">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Contact Number</label>
+            <input type="tel" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-cyan-400" placeholder="0917 XXX XXXX">
+          </div>
+          <button type="button" onclick="alert('Inquiry sent to staff!')" class="w-full py-3 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black rounded-xl text-lg">
+            Submit Request
+          </button>
+        </form>
+      </div>
+    </div>
+  -->
+
+
+  <!-- APPLICATION JAVASCRIPT LOGIC -->
+  <script>
+    // 1. AIRCON CATALOG DATASET
+    const productsData = [
+  {
+    "id": 1,
+    "brand": "Matrix",
+    "title": "Matrix O.6HP Air Conditioner (MX-KC1509)",
+    "type": "Window Manual",
+    "price": "₱11,800",
+    rawPrice: 11800,
+    "hp": "O.6HP",
+    "energy": "Standard Efficiency",
+    "gas": "R32",
+    "noise": "Quiet Operation",
+    "warranty": "1 Year Parts & Service",
+    "tech": "Matrix Performance",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Matrix O.6HP air conditioning unit (MX-KC1509). Voltage: 220-230/1/60."
+  },
+  {
+    "id": 2,
+    "brand": "Matrix",
+    "title": "Matrix 1.0HP Air Conditioner (MX-KC1100)",
+    "type": "Window Manual",
+    "price": "₱17,400",
+    rawPrice: 17400,
+    "hp": "1.0HP",
+    "energy": "Standard Efficiency",
+    "gas": "R32",
+    "noise": "Quiet Operation",
+    "warranty": "1 Year Parts & Service",
+    "tech": "Matrix Performance",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Matrix 1.0HP air conditioning unit (MX-KC1100). Voltage: 220-230/1/60."
+  },
+  {
+    "id": 3,
+    "brand": "Matrix",
+    "title": "Matrix 1.5HP Air Conditioner (MX-KC35)",
+    "type": "Window Manual",
+    "price": "₱22,200",
+    rawPrice: 22200,
+    "hp": "1.5HP",
+    "energy": "Standard Efficiency",
+    "gas": "R32",
+    "noise": "Quiet Operation",
+    "warranty": "1 Year Parts & Service",
+    "tech": "Matrix Performance",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Matrix 1.5HP air conditioning unit (MX-KC35). Voltage: 220-230/1/60."
+  },
+  {
+    "id": 4,
+    "brand": "Matrix",
+    "title": "Matrix 2.0HP Air Conditioner (MX-KC50)",
+    "type": "Window Manual",
+    "price": "₱30,100",
+    rawPrice: 30100,
+    "hp": "2.0HP",
+    "energy": "Standard Efficiency",
+    "gas": "R32",
+    "noise": "Quiet Operation",
+    "warranty": "1 Year Parts & Service",
+    "tech": "Matrix Performance",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Matrix 2.0HP air conditioning unit (MX-KC50). Voltage: 220-230/1/60."
+  },
+  {
+    "id": 5,
+    "brand": "Matrix",
+    "title": "Matrix 2.5HP Air Conditioner (MX-KC2500)",
+    "type": "Window Manual",
+    "price": "₱35,700",
+    rawPrice: 35700,
+    "hp": "2.5HP",
+    "energy": "Standard Efficiency",
+    "gas": "R32",
+    "noise": "Quiet Operation",
+    "warranty": "1 Year Parts & Service",
+    "tech": "Matrix Performance",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Matrix 2.5HP air conditioning unit (MX-KC2500). Voltage: 220-230/1/60."
+  },
+  {
+    "id": 6,
+    "brand": "Matrix",
+    "title": "Matrix 1.0HP Air Conditioner (MX-INV1100-M)",
+    "type": "Window Inverter",
+    "price": "₱30,200",
+    rawPrice: 30200,
+    "hp": "1.0HP",
+    "energy": "DC Inverter",
+    "gas": "R32",
+    "noise": "Quiet Operation",
+    "warranty": "1 Year Parts & Service",
+    "tech": "Matrix Performance",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Matrix 1.0HP air conditioning unit (MX-INV1100-M). Voltage: 220-230/1/60."
+  },
+  {
+    "id": 7,
+    "brand": "Matrix",
+    "title": "Matrix 1.0HP Air Conditioner (MX-INV1100-T)",
+    "type": "Window Inverter",
+    "price": "₱27,000",
+    rawPrice: 27000,
+    "hp": "1.0HP",
+    "energy": "DC Inverter",
+    "gas": "R32",
+    "noise": "Quiet Operation",
+    "warranty": "1 Year Parts & Service",
+    "tech": "Matrix Performance",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Matrix 1.0HP air conditioning unit (MX-INV1100-T). Voltage: 220-230/1/60."
+  },
+  {
+    "id": 8,
+    "brand": "Matrix",
+    "title": "Matrix 1.5HP Air Conditioner (MX-INV35-M)",
+    "type": "Window Inverter",
+    "price": "₱33,200",
+    rawPrice: 33200,
+    "hp": "1.5HP",
+    "energy": "DC Inverter",
+    "gas": "R32",
+    "noise": "Quiet Operation",
+    "warranty": "1 Year Parts & Service",
+    "tech": "Matrix Performance",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Matrix 1.5HP air conditioning unit (MX-INV35-M). Voltage: 220-230/1/60."
+  },
+  {
+    "id": 9,
+    "brand": "Matrix",
+    "title": "Matrix 1.5HP Air Conditioner (MX-INV35-T)",
+    "type": "Window Inverter",
+    "price": "₱30,200",
+    rawPrice: 30200,
+    "hp": "1.5HP",
+    "energy": "DC Inverter",
+    "gas": "R32",
+    "noise": "Quiet Operation",
+    "warranty": "1 Year Parts & Service",
+    "tech": "Matrix Performance",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Matrix 1.5HP air conditioning unit (MX-INV35-T). Voltage: 220-230/1/60."
+  },
+  {
+    "id": 10,
+    "brand": "Matrix",
+    "title": "Matrix 2.0HP Air Conditioner (MX-INV50-T)",
+    "type": "Window Inverter",
+    "price": "₱38,000",
+    rawPrice: 38000,
+    "hp": "2.0HP",
+    "energy": "DC Inverter",
+    "gas": "R32",
+    "noise": "Quiet Operation",
+    "warranty": "1 Year Parts & Service",
+    "tech": "Matrix Performance",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Matrix 2.0HP air conditioning unit (MX-INV50-T). Voltage: 220-230/1/60."
+  },
+  {
+    "id": 11,
+    "brand": "Matrix",
+    "title": "Matrix 1.0HP Air Conditioner (MX-INVS1100)",
+    "type": "Split Inverter",
+    "price": "₱25,900",
+    rawPrice: 25900,
+    "hp": "1.0HP",
+    "energy": "DC Inverter",
+    "gas": "R32",
+    "noise": "Quiet Operation",
+    "warranty": "1 Year Parts & Service",
+    "tech": "Matrix Performance",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Matrix 1.0HP air conditioning unit (MX-INVS1100). Voltage: 220-230/1/60."
+  },
+  {
+    "id": 12,
+    "brand": "Matrix",
+    "title": "Matrix 1.5HP Air Conditioner (MX-INVS35)",
+    "type": "Split Inverter",
+    "price": "₱29,000",
+    rawPrice: 29000,
+    "hp": "1.5HP",
+    "energy": "DC Inverter",
+    "gas": "R32",
+    "noise": "Quiet Operation",
+    "warranty": "1 Year Parts & Service",
+    "tech": "Matrix Performance",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Matrix 1.5HP air conditioning unit (MX-INVS35). Voltage: 220-230/1/60."
+  },
+  {
+    "id": 13,
+    "brand": "Matrix",
+    "title": "Matrix 2.0HP Air Conditioner (MX-INVS50)",
+    "type": "Split Inverter",
+    "price": "₱37,400",
+    rawPrice: 37400,
+    "hp": "2.0HP",
+    "energy": "DC Inverter",
+    "gas": "R32",
+    "noise": "Quiet Operation",
+    "warranty": "1 Year Parts & Service",
+    "tech": "Matrix Performance",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Matrix 2.0HP air conditioning unit (MX-INVS50). Voltage: 220-230/1/60."
+  },
+  {
+    "id": 14,
+    "brand": "Matrix",
+    "title": "Matrix 2.5HP Air Conditioner (MX-INVS2500)",
+    "type": "Split Inverter",
+    "price": "₱45,800",
+    rawPrice: 45800,
+    "hp": "2.5HP",
+    "energy": "DC Inverter",
+    "gas": "R32",
+    "noise": "Quiet Operation",
+    "warranty": "1 Year Parts & Service",
+    "tech": "Matrix Performance",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Matrix 2.5HP air conditioning unit (MX-INVS2500). Voltage: 220-230/1/60."
+  },
+  {
+    "id": 15,
+    "brand": "AUX",
+    "title": "AUX 1hp FLDI Standard Inverter Split Wall",
+    "type": "Split Inverter",
+    "price": "₱17,999",
+    rawPrice: 17999,
+    "hp": "1HP",
+    "energy": "Inverter",
+    "gas": "R32 Eco Gas",
+    "noise": "Quiet Operation",
+    "warranty": "Standard Warranty",
+    "tech": "Smart / Inverter Tech",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "AUX 1hp FLDI Standard Inverter Split Wall (Model: ASW09/FLDI). SRP: ₱35,499.00."
+  },
+  {
+    "id": 16,
+    "brand": "AUX",
+    "title": "AUX 1.5hp FLDI Standard Inverter Split Wall",
+    "type": "Split Inverter",
+    "price": "₱20,999",
+    rawPrice: 20999,
+    "hp": "1.5HP",
+    "energy": "Inverter",
+    "gas": "R32 Eco Gas",
+    "noise": "Quiet Operation",
+    "warranty": "Standard Warranty",
+    "tech": "Smart / Inverter Tech",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "AUX 1.5hp FLDI Standard Inverter Split Wall (Model: ASW12A2/FLDI). SRP: ₱39,999.00."
+  },
+  {
+    "id": 17,
+    "brand": "AUX",
+    "title": "AUX 2hp FLDI Standard Inverter Split Wall",
+    "type": "Split Inverter",
+    "price": "₱28,999",
+    rawPrice: 28999,
+    "hp": "2HP",
+    "energy": "Inverter",
+    "gas": "R32 Eco Gas",
+    "noise": "Quiet Operation",
+    "warranty": "Standard Warranty",
+    "tech": "Smart / Inverter Tech",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "AUX 2hp FLDI Standard Inverter Split Wall (Model: ASW18A2/FLDI). SRP: ₱49,999.00."
+  },
+  {
+    "id": 18,
+    "brand": "AUX",
+    "title": "AUX 2.5hp FLDI Standard Inverter Split Wall",
+    "type": "Split Inverter",
+    "price": "₱34,499",
+    rawPrice: 34499,
+    "hp": "2.5HP",
+    "energy": "Inverter",
+    "gas": "R32 Eco Gas",
+    "noise": "Quiet Operation",
+    "warranty": "Standard Warranty",
+    "tech": "Smart / Inverter Tech",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "AUX 2.5hp FLDI Standard Inverter Split Wall (Model: ASW24A2/FLDI). SRP: ₱59,999.00."
+  },
+  {
+    "id": 19,
+    "brand": "AUX",
+    "title": "AUX 3hp FLDI Standard Inverter Split Wall",
+    "type": "Split Inverter",
+    "price": "₱38,499",
+    rawPrice: 38499,
+    "hp": "3HP",
+    "energy": "Inverter",
+    "gas": "R32 Eco Gas",
+    "noise": "Quiet Operation",
+    "warranty": "Standard Warranty",
+    "tech": "Smart / Inverter Tech",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "AUX 3hp FLDI Standard Inverter Split Wall (Model: ASW30A2/FLDI). SRP: ₱65,999.00."
+  },
+  {
+    "id": 20,
+    "brand": "AUX",
+    "title": "AUX 1hp JADI Premium Inverter Split Wall",
+    "type": "Split Inverter",
+    "price": "₱14,999",
+    rawPrice: 14999,
+    "hp": "1HP",
+    "energy": "Inverter",
+    "gas": "R32 Eco Gas",
+    "noise": "Quiet Operation",
+    "warranty": "Standard Warranty",
+    "tech": "Smart / Inverter Tech",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "AUX 1hp JADI Premium Inverter Split Wall (Model: ASW09A2/JADI). SRP: ₱34,999.00."
+  },
+  {
+    "id": 21,
+    "brand": "AUX",
+    "title": "AUX 2.5hp Q-Series Premium Full DC Inverter Split Wall",
+    "type": "Split Inverter",
+    "price": "₱34,499",
+    rawPrice: 34499,
+    "hp": "2.5HP",
+    "energy": "Inverter",
+    "gas": "R32 Eco Gas",
+    "noise": "Quiet Operation",
+    "warranty": "Standard Warranty",
+    "tech": "Smart / Inverter Tech",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "AUX 2.5hp Q-Series Premium Full DC Inverter Split Wall (Model: ASW24A2/QCDI). SRP: ₱64,799.00."
+  },
+  {
+    "id": 22,
+    "brand": "AUFIT",
+    "title": "AUFIT 1hp AUFIT FMDI Standard Inverter Split Wall",
+    "type": "Split Inverter",
+    "price": "₱14,999",
+    rawPrice: 14999,
+    "hp": "1HP",
+    "energy": "Inverter",
+    "gas": "R32 Eco Gas",
+    "noise": "Quiet Operation",
+    "warranty": "Standard Warranty",
+    "tech": "Smart / Inverter Tech",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "AUFIT 1hp AUFIT FMDI Standard Inverter Split Wall (Model: ASW09/FMDI). SRP: ₱35,499.00."
+  },
+  {
+    "id": 23,
+    "brand": "AUFIT",
+    "title": "AUFIT 1.5hp AUFIT FMDI Standard Inverter Split Wall",
+    "type": "Split Inverter",
+    "price": "₱16,999",
+    rawPrice: 16999,
+    "hp": "1.5HP",
+    "energy": "Inverter",
+    "gas": "R32 Eco Gas",
+    "noise": "Quiet Operation",
+    "warranty": "Standard Warranty",
+    "tech": "Smart / Inverter Tech",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "AUFIT 1.5hp AUFIT FMDI Standard Inverter Split Wall (Model: ASW12A2/FMDI). SRP: ₱39,999.00."
+  },
+  {
+    "id": 24,
+    "brand": "AUFIT",
+    "title": "AUFIT 2hp AUFIT FIDI Standard Inverter Split Wall",
+    "type": "Split Inverter",
+    "price": "₱21,999",
+    rawPrice: 21999,
+    "hp": "2HP",
+    "energy": "Inverter",
+    "gas": "R32 Eco Gas",
+    "noise": "Quiet Operation",
+    "warranty": "Standard Warranty",
+    "tech": "Smart / Inverter Tech",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "AUFIT 2hp AUFIT FIDI Standard Inverter Split Wall (Model: ASW18A2/FIDI). SRP: ₱49,999.00."
+  },
+  {
+    "id": 25,
+    "brand": "AUFIT",
+    "title": "AUFIT 2.5hp AUFIT FIDI Standard Inverter Split Wall",
+    "type": "Split Inverter",
+    "price": "₱28,999",
+    rawPrice: 28999,
+    "hp": "2.5HP",
+    "energy": "Inverter",
+    "gas": "R32 Eco Gas",
+    "noise": "Quiet Operation",
+    "warranty": "Standard Warranty",
+    "tech": "Smart / Inverter Tech",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "AUFIT 2.5hp AUFIT FIDI Standard Inverter Split Wall (Model: ASW24A2/FIDI). SRP: ₱59,999.00."
+  },
+  {
+    "id": 26,
+    "brand": "AUFIT",
+    "title": "AUFIT 1hp AUFIT QFDI Premium Full DC Inverter Split Wall",
+    "type": "Split Inverter",
+    "price": "₱15,510",
+    rawPrice: 15510,
+    "hp": "1HP",
+    "energy": "Inverter",
+    "gas": "R32 Eco Gas",
+    "noise": "Quiet Operation",
+    "warranty": "Standard Warranty",
+    "tech": "Smart / Inverter Tech",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "AUFIT 1hp AUFIT QFDI Premium Full DC Inverter Split Wall (Model: ASW09/QFDI). SRP: ₱38,999.00."
+  },
+  {
+    "id": 27,
+    "brand": "AUFIT",
+    "title": "AUFIT 1.5hp QFDI FMDI Premium Full DC Inverter Split Wall",
+    "type": "Split Inverter",
+    "price": "₱17,999",
+    rawPrice: 17999,
+    "hp": "1.5HP",
+    "energy": "Inverter",
+    "gas": "R32 Eco Gas",
+    "noise": "Quiet Operation",
+    "warranty": "Standard Warranty",
+    "tech": "Smart / Inverter Tech",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "AUFIT 1.5hp QFDI FMDI Premium Full DC Inverter Split Wall (Model: ASW12A2/QFDI). SRP: ₱43,999.00."
+  },
+  {
+    "id": 28,
+    "brand": "AUFIT",
+    "title": "AUFIT 2hp AUFIT QFDI Premium Full DC Inverter Split Wall",
+    "type": "Split Inverter",
+    "price": "₱23,999",
+    rawPrice: 23999,
+    "hp": "2HP",
+    "energy": "Inverter",
+    "gas": "R32 Eco Gas",
+    "noise": "Quiet Operation",
+    "warranty": "Standard Warranty",
+    "tech": "Smart / Inverter Tech",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "AUFIT 2hp AUFIT QFDI Premium Full DC Inverter Split Wall (Model: ASW18A2/QFDI). SRP: ₱53,799.00."
+  },
+  {
+    "id": 29,
+    "brand": "AUFIT",
+    "title": "AUFIT 2.5hp AUFIT QFDI Premium Full DC Inverter Split Wall",
+    "type": "Split Inverter",
+    "price": "₱29,999",
+    rawPrice: 29999,
+    "hp": "2.5HP",
+    "energy": "Inverter",
+    "gas": "R32 Eco Gas",
+    "noise": "Quiet Operation",
+    "warranty": "Standard Warranty",
+    "tech": "Smart / Inverter Tech",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "AUFIT 2.5hp AUFIT QFDI Premium Full DC Inverter Split Wall (Model: ASW24A2/QFDI). SRP: ₱66,799.00."
+  },
+  {
+    "id": 30,
+    "brand": "AUFIT",
+    "title": "AUFIT 3hp Q-Series Premium Full DC Inverter Split Wall",
+    "type": "Split Inverter",
+    "price": "₱33,750",
+    rawPrice: 33750,
+    "hp": "3HP",
+    "energy": "Inverter",
+    "gas": "R32 Eco Gas",
+    "noise": "Quiet Operation",
+    "warranty": "Standard Warranty",
+    "tech": "Smart / Inverter Tech",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "AUFIT 3hp Q-Series Premium Full DC Inverter Split Wall (Model: ASW30A2/QFDI). SRP: ₱74,999.00."
+  },
+  {
+    "id": 31,
+    "brand": "HK",
+    "title": "HK 1.0HP HK Window Inverter Type Aircon, Gold Fin",
+    "type": "Window Inverter",
+    "price": "₱18,199",
+    rawPrice: 18199,
+    "hp": "1.0HP",
+    "energy": "Inverter",
+    "gas": "R32 Eco Gas",
+    "noise": "Quiet Operation",
+    "warranty": "Standard Warranty",
+    "tech": "Smart / Inverter Tech",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "HK 1.0HP HK Window Inverter Type Aircon, Gold Fin (Model: HK-09WR-INV/F9MD). SRP: ₱26,499.00."
+  },
+  {
+    "id": 32,
+    "brand": "Daikin",
+    "title": "Daikin D-Smart 0.8HP Wall Mounted Inverter",
+    "type": "Split Inverter",
+    "price": "₱31,600",
+    rawPrice: 31600,
+    "hp": "0.8 HP",
+    "energy": "4.60 CSPF",
+    "gas": "R32",
+    "noise": "Ultra Quiet",
+    "warranty": "Standard Warranty",
+    "tech": "All-Voltage Guard & Gin-ION Filter",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Daikin Daikin D-Smart 0.8HP Wall Mounted Inverter (FTKQ20BVA / RKQ20BVA)."
+  },
+  {
+    "id": 33,
+    "brand": "Daikin",
+    "title": "Daikin D-Smart 1.0HP Wall Mounted Inverter",
+    "type": "Split Inverter",
+    "price": "₱35,600",
+    rawPrice: 35600,
+    "hp": "1.0 HP",
+    "energy": "4.60 CSPF",
+    "gas": "R32",
+    "noise": "Ultra Quiet",
+    "warranty": "Standard Warranty",
+    "tech": "All-Voltage Guard & Gin-ION Filter",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Daikin Daikin D-Smart 1.0HP Wall Mounted Inverter (FTKQ25BVA / RKQ25BVA)."
+  },
+  {
+    "id": 34,
+    "brand": "Daikin",
+    "title": "Daikin D-Smart 1.5HP Wall Mounted Inverter",
+    "type": "Split Inverter",
+    "price": "₱40,000",
+    rawPrice: 40000,
+    "hp": "1.5 HP",
+    "energy": "4.60 CSPF",
+    "gas": "R32",
+    "noise": "Ultra Quiet",
+    "warranty": "Standard Warranty",
+    "tech": "All-Voltage Guard & Gin-ION Filter",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Daikin Daikin D-Smart 1.5HP Wall Mounted Inverter (FTKQ35BVA / RKQ35BVA)."
+  },
+  {
+    "id": 35,
+    "brand": "Daikin",
+    "title": "Daikin D-Smart 2.0HP Wall Mounted Inverter",
+    "type": "Split Inverter",
+    "price": "₱52,200",
+    rawPrice: 52200,
+    "hp": "2.0 HP",
+    "energy": "5.02 CSPF",
+    "gas": "R32",
+    "noise": "Ultra Quiet",
+    "warranty": "Standard Warranty",
+    "tech": "All-Voltage Guard & Gin-ION Filter",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Daikin Daikin D-Smart 2.0HP Wall Mounted Inverter (FTKQ50BVA / RKQ50BVA)."
+  },
+  {
+    "id": 36,
+    "brand": "Daikin",
+    "title": "Daikin D-Smart 2.5HP Wall Mounted Inverter",
+    "type": "Split Inverter",
+    "price": "₱60,500",
+    rawPrice: 60500,
+    "hp": "2.5 HP",
+    "energy": "6.10 CSPF",
+    "gas": "R32",
+    "noise": "Ultra Quiet",
+    "warranty": "Standard Warranty",
+    "tech": "All-Voltage Guard & Gin-ION Filter",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Daikin Daikin D-Smart 2.5HP Wall Mounted Inverter (FTKQ60BVA / RKQ60BVA)."
+  },
+  {
+    "id": 37,
+    "brand": "Daikin",
+    "title": "Daikin D-Smart Queen 1.0HP Inverter",
+    "type": "Split Inverter",
+    "price": "₱42,800",
+    rawPrice: 42800,
+    "hp": "1.0 HP",
+    "energy": "6.40 CSPF",
+    "gas": "R32",
+    "noise": "Ultra Quiet",
+    "warranty": "Standard Warranty",
+    "tech": "All-Voltage Guard & Gin-ION Filter",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Daikin Daikin D-Smart Queen 1.0HP Inverter (FTKC25AVA / RKC25AVA)."
+  },
+  {
+    "id": 38,
+    "brand": "Daikin",
+    "title": "Daikin D-Smart Queen 1.5HP Inverter",
+    "type": "Split Inverter",
+    "price": "₱48,000",
+    rawPrice: 48000,
+    "hp": "1.5 HP",
+    "energy": "6.31 CSPF",
+    "gas": "R32",
+    "noise": "Ultra Quiet",
+    "warranty": "Standard Warranty",
+    "tech": "All-Voltage Guard & Gin-ION Filter",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Daikin Daikin D-Smart Queen 1.5HP Inverter (FTKC35AVA / RKC35AVA)."
+  },
+  {
+    "id": 39,
+    "brand": "Daikin",
+    "title": "Daikin D-Smart King 1.0HP Inverter w/ Wi-Fi",
+    "type": "Split Inverter",
+    "price": "₱56,800",
+    rawPrice: 56800,
+    "hp": "1.0 HP",
+    "energy": "7.24 CSPF",
+    "gas": "R32",
+    "noise": "Ultra Quiet",
+    "warranty": "Standard Warranty",
+    "tech": "All-Voltage Guard & Gin-ION Filter",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Daikin Daikin D-Smart King 1.0HP Inverter w/ Wi-Fi (FTKZ25WVM / RKZ25WVM)."
+  },
+  {
+    "id": 40,
+    "brand": "Daikin",
+    "title": "Daikin D-Smart King 1.5HP Inverter w/ Wi-Fi",
+    "type": "Split Inverter",
+    "price": "₱62,800",
+    rawPrice: 62800,
+    "hp": "1.5 HP",
+    "energy": "6.68 CSPF",
+    "gas": "R32",
+    "noise": "Ultra Quiet",
+    "warranty": "Standard Warranty",
+    "tech": "All-Voltage Guard & Gin-ION Filter",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Daikin Daikin D-Smart King 1.5HP Inverter w/ Wi-Fi (FTKZ35WVM / RKZ35WVM)."
+  },
+  {
+    "id": 41,
+    "brand": "Daikin",
+    "title": "Daikin Cooling King 0.8HP Non-Inverter",
+    "type": "Split Non-Inverter",
+    "price": "₱23,800",
+    rawPrice: 23800,
+    "hp": "0.8 HP",
+    "energy": "3.50 CSPF",
+    "gas": "R32",
+    "noise": "Ultra Quiet",
+    "warranty": "Standard Warranty",
+    "tech": "All-Voltage Guard & Gin-ION Filter",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Daikin Daikin Cooling King 0.8HP Non-Inverter (FTNE20AXVL9 / RNE20AGXVL9)."
+  },
+  {
+    "id": 42,
+    "brand": "Daikin",
+    "title": "Daikin Cooling King 1.0HP Non-Inverter",
+    "type": "Split Non-Inverter",
+    "price": "₱28,400",
+    rawPrice: 28400,
+    "hp": "1.0 HP",
+    "energy": "3.47 CSPF",
+    "gas": "R32",
+    "noise": "Ultra Quiet",
+    "warranty": "Standard Warranty",
+    "tech": "All-Voltage Guard & Gin-ION Filter",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Daikin Daikin Cooling King 1.0HP Non-Inverter (FTN25AXVLS / RN25AGXVL9)."
+  },
+  {
+    "id": 43,
+    "brand": "Koppel",
+    "title": "Koppel 0.6HP Window Manual EVO Series",
+    "type": "Window Manual",
+    "price": "₱10,595",
+    rawPrice: 10595,
+    "hp": "0.6 HP",
+    "energy": "Standard",
+    "gas": "R32",
+    "noise": "Quiet Operation",
+    "warranty": "5 Yrs Compressor",
+    "tech": "Silver Ion Anti-Bacterial Filter",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Koppel 0.6HP Window Manual EVO Series (KWR-06M4A2). Eco-Friendly R32 Refrigerant."
+  },
+  {
+    "id": 44,
+    "brand": "Koppel",
+    "title": "Koppel 0.75HP Window Manual EVO Series",
+    "type": "Window Manual",
+    "price": "₱15,595",
+    rawPrice: 15595,
+    "hp": "0.75 HP",
+    "energy": "Standard",
+    "gas": "R32",
+    "noise": "Quiet Operation",
+    "warranty": "5 Yrs Compressor",
+    "tech": "Silver Ion Anti-Bacterial Filter",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Koppel 0.75HP Window Manual EVO Series (KWR-07M4A2). Eco-Friendly R32 Refrigerant."
+  },
+  {
+    "id": 45,
+    "brand": "Koppel",
+    "title": "Koppel 1.0HP Window Manual EVO Series",
+    "type": "Window Manual",
+    "price": "₱17,395",
+    rawPrice: 17395,
+    "hp": "1.0 HP",
+    "energy": "Standard",
+    "gas": "R32",
+    "noise": "Quiet Operation",
+    "warranty": "5 Yrs Compressor",
+    "tech": "Silver Ion Anti-Bacterial Filter",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Koppel 1.0HP Window Manual EVO Series (KWR-09M4A2). Eco-Friendly R32 Refrigerant."
+  },
+  {
+    "id": 46,
+    "brand": "Koppel",
+    "title": "Koppel 1.5HP Window Manual EVO Series",
+    "type": "Window Manual",
+    "price": "₱20,795",
+    rawPrice: 20795,
+    "hp": "1.5 HP",
+    "energy": "Standard",
+    "gas": "R32",
+    "noise": "Quiet Operation",
+    "warranty": "5 Yrs Compressor",
+    "tech": "Silver Ion Anti-Bacterial Filter",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Koppel 1.5HP Window Manual EVO Series (KWR-12M4A2). Eco-Friendly R32 Refrigerant."
+  },
+  {
+    "id": 47,
+    "brand": "Koppel",
+    "title": "Koppel 1.0HP Window Remote EVO Series",
+    "type": "Window Non-Inverter",
+    "price": "₱19,095",
+    rawPrice: 19095,
+    "hp": "1.0 HP",
+    "energy": "Standard",
+    "gas": "R32",
+    "noise": "Quiet Operation",
+    "warranty": "5 Yrs Compressor",
+    "tech": "Silver Ion Anti-Bacterial Filter",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Koppel 1.0HP Window Remote EVO Series (KWR-09R4A2). Eco-Friendly R32 Refrigerant."
+  },
+  {
+    "id": 48,
+    "brand": "Koppel",
+    "title": "Koppel 1.5HP Window Remote EVO Series",
+    "type": "Window Non-Inverter",
+    "price": "₱23,195",
+    rawPrice: 23195,
+    "hp": "1.5 HP",
+    "energy": "Standard",
+    "gas": "R32",
+    "noise": "Quiet Operation",
+    "warranty": "5 Yrs Compressor",
+    "tech": "Silver Ion Anti-Bacterial Filter",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Koppel 1.5HP Window Remote EVO Series (KWR-12R4A2). Eco-Friendly R32 Refrigerant."
+  },
+  {
+    "id": 49,
+    "brand": "Koppel",
+    "title": "Koppel Super Inverter 1.0HP Window Aircon",
+    "type": "Window Inverter",
+    "price": "₱32,395",
+    rawPrice: 32395,
+    "hp": "1.0 HP",
+    "energy": "Full DC Inverter",
+    "gas": "R32",
+    "noise": "Quiet Operation",
+    "warranty": "5 Yrs Compressor",
+    "tech": "Silver Ion Anti-Bacterial Filter",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Koppel Super Inverter 1.0HP Window Aircon (KV09WR-ARF31A). Eco-Friendly R32 Refrigerant."
+  },
+  {
+    "id": 50,
+    "brand": "Koppel",
+    "title": "Koppel Super Inverter 1.5HP Window Aircon",
+    "type": "Window Inverter",
+    "price": "₱36,595",
+    rawPrice: 36595,
+    "hp": "1.5 HP",
+    "energy": "Full DC Inverter",
+    "gas": "R32",
+    "noise": "Quiet Operation",
+    "warranty": "5 Yrs Compressor",
+    "tech": "Silver Ion Anti-Bacterial Filter",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Koppel Super Inverter 1.5HP Window Aircon (KV12WR-ARF31A). Eco-Friendly R32 Refrigerant."
+  },
+  {
+    "id": 51,
+    "brand": "Koppel",
+    "title": "Koppel Super Inverter 2.0HP Window Aircon",
+    "type": "Window Inverter",
+    "price": "₱44,895",
+    rawPrice: 44895,
+    "hp": "2.0 HP",
+    "energy": "Full DC Inverter",
+    "gas": "R32",
+    "noise": "Quiet Operation",
+    "warranty": "5 Yrs Compressor",
+    "tech": "Silver Ion Anti-Bacterial Filter",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Koppel Super Inverter 2.0HP Window Aircon (KV18WR-ARF31A). Eco-Friendly R32 Refrigerant."
+  },
+  {
+    "id": 52,
+    "brand": "Koppel",
+    "title": "Koppel 1.0HP Wall Mounted EVO Series",
+    "type": "Split Non-Inverter",
+    "price": "₱23,695",
+    rawPrice: 23695,
+    "hp": "1.0 HP",
+    "energy": "Standard",
+    "gas": "R32",
+    "noise": "Quiet Operation",
+    "warranty": "5 Yrs Compressor",
+    "tech": "Silver Ion Anti-Bacterial Filter",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Koppel 1.0HP Wall Mounted EVO Series (KSW-09R4A2). Eco-Friendly R32 Refrigerant."
+  },
+  {
+    "id": 53,
+    "brand": "Koppel",
+    "title": "Koppel 1.5HP Wall Mounted EVO Series",
+    "type": "Split Non-Inverter",
+    "price": "₱27,195",
+    rawPrice: 27195,
+    "hp": "1.5 HP",
+    "energy": "Standard",
+    "gas": "R32",
+    "noise": "Quiet Operation",
+    "warranty": "5 Yrs Compressor",
+    "tech": "Silver Ion Anti-Bacterial Filter",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Koppel 1.5HP Wall Mounted EVO Series (KSW-12R4A2). Eco-Friendly R32 Refrigerant."
+  },
+  {
+    "id": 54,
+    "brand": "Koppel",
+    "title": "Koppel Lunaire 1.0HP Super Inverter Split",
+    "type": "Split Inverter",
+    "price": "₱33,995",
+    rawPrice: 33995,
+    "hp": "1.0 HP",
+    "energy": "Full DC Inverter",
+    "gas": "R32",
+    "noise": "Quiet Operation",
+    "warranty": "5 Yrs Compressor",
+    "tech": "Silver Ion Anti-Bacterial Filter",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Koppel Lunaire 1.0HP Super Inverter Split (KV09WM-ARF31D). Eco-Friendly R32 Refrigerant."
+  },
+  {
+    "id": 55,
+    "brand": "Koppel",
+    "title": "Koppel Lunaire 1.5HP Super Inverter Split",
+    "type": "Split Inverter",
+    "price": "₱38,295",
+    rawPrice: 38295,
+    "hp": "1.5 HP",
+    "energy": "Full DC Inverter",
+    "gas": "R32",
+    "noise": "Quiet Operation",
+    "warranty": "5 Yrs Compressor",
+    "tech": "Silver Ion Anti-Bacterial Filter",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Koppel Lunaire 1.5HP Super Inverter Split (KV12WM-ARF31D). Eco-Friendly R32 Refrigerant."
+  },
+  {
+    "id": 56,
+    "brand": "Koppel",
+    "title": "Koppel Lunaire 2.0HP Super Inverter Split",
+    "type": "Split Inverter",
+    "price": "₱48,895",
+    rawPrice: 48895,
+    "hp": "2.0 HP",
+    "energy": "Full DC Inverter",
+    "gas": "R32",
+    "noise": "Quiet Operation",
+    "warranty": "5 Yrs Compressor",
+    "tech": "Silver Ion Anti-Bacterial Filter",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Koppel Lunaire 2.0HP Super Inverter Split (KV18WM-ARF31D). Eco-Friendly R32 Refrigerant."
+  },
+  {
+    "id": 57,
+    "brand": "Midea",
+    "title": "Midea 0.6HP Manual Window Aircon",
+    "type": "Window Manual",
+    "price": "₱9,095",
+    rawPrice: 9095,
+    "hp": "0.6 HP",
+    "energy": "Standard",
+    "gas": "R32",
+    "noise": "Low Noise",
+    "warranty": "Standard Warranty",
+    "tech": "Midea Smart Cooling",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Midea 0.6HP Manual Window Aircon (FP-51ARA005HMNV-N5)."
+  },
+  {
+    "id": 58,
+    "brand": "Midea",
+    "title": "Midea 0.75HP Manual Window Aircon",
+    "type": "Window Manual",
+    "price": "₱15,995",
+    rawPrice: 15995,
+    "hp": "0.75 HP",
+    "energy": "Standard",
+    "gas": "R32",
+    "noise": "Low Noise",
+    "warranty": "Standard Warranty",
+    "tech": "Midea Smart Cooling",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Midea 0.75HP Manual Window Aircon (FP-51ARA008HMNV-N5)."
+  },
+  {
+    "id": 59,
+    "brand": "Midea",
+    "title": "Midea 1.0HP Manual Window Aircon",
+    "type": "Window Manual",
+    "price": "₱18,495",
+    rawPrice: 18495,
+    "hp": "1.0 HP",
+    "energy": "Standard",
+    "gas": "R32",
+    "noise": "Low Noise",
+    "warranty": "Standard Warranty",
+    "tech": "Midea Smart Cooling",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Midea 1.0HP Manual Window Aircon (FP-51ARA010HMNV-N5)."
+  },
+  {
+    "id": 60,
+    "brand": "Midea",
+    "title": "Midea 1.5HP Manual Window Aircon",
+    "type": "Window Manual",
+    "price": "₱21,695",
+    rawPrice: 21695,
+    "hp": "1.5 HP",
+    "energy": "Standard",
+    "gas": "R32",
+    "noise": "Low Noise",
+    "warranty": "Standard Warranty",
+    "tech": "Midea Smart Cooling",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Midea 1.5HP Manual Window Aircon (FP-51ARA015HMNV-N5)."
+  },
+  {
+    "id": 61,
+    "brand": "Midea",
+    "title": "Midea 1.0HP U-WRAC Inverter Window Aircon",
+    "type": "Window Inverter",
+    "price": "₱27,998",
+    rawPrice: 27998,
+    "hp": "1.0 HP",
+    "energy": "Inverter",
+    "gas": "R32",
+    "noise": "Low Noise",
+    "warranty": "Standard Warranty",
+    "tech": "Midea Smart Cooling",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Midea 1.0HP U-WRAC Inverter Window Aircon (FP-51ARA010HEIV-U5)."
+  },
+  {
+    "id": 62,
+    "brand": "Midea",
+    "title": "Midea 1.5HP U-WRAC Inverter Window Aircon",
+    "type": "Window Inverter",
+    "price": "₱31,998",
+    rawPrice: 31998,
+    "hp": "1.5 HP",
+    "energy": "Inverter",
+    "gas": "R32",
+    "noise": "Low Noise",
+    "warranty": "Standard Warranty",
+    "tech": "Midea Smart Cooling",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Midea 1.5HP U-WRAC Inverter Window Aircon (FP-51ARA015HEIV-U5)."
+  },
+  {
+    "id": 63,
+    "brand": "Midea",
+    "title": "Midea Celest 1.0HP Inverter Split",
+    "type": "Split Inverter",
+    "price": "₱27,998",
+    rawPrice: 27998,
+    "hp": "1.0 HP",
+    "energy": "Inverter",
+    "gas": "R32",
+    "noise": "Low Noise",
+    "warranty": "Standard Warranty",
+    "tech": "Midea Smart Cooling",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Midea Celest 1.0HP Inverter Split (FP-53AST010KEIV-F4)."
+  },
+  {
+    "id": 64,
+    "brand": "Midea",
+    "title": "Midea Celest 1.5HP Inverter Split",
+    "type": "Split Inverter",
+    "price": "₱29,498",
+    rawPrice: 29498,
+    "hp": "1.5 HP",
+    "energy": "Inverter",
+    "gas": "R32",
+    "noise": "Low Noise",
+    "warranty": "Standard Warranty",
+    "tech": "Midea Smart Cooling",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Midea Celest 1.5HP Inverter Split (FP-53AST015KEIV-F4)."
+  },
+  {
+    "id": 65,
+    "brand": "Midea",
+    "title": "Midea Celest 2.0HP Inverter Split",
+    "type": "Split Inverter",
+    "price": "₱37,998",
+    rawPrice: 37998,
+    "hp": "2.0 HP",
+    "energy": "Inverter",
+    "gas": "R32",
+    "noise": "Low Noise",
+    "warranty": "Standard Warranty",
+    "tech": "Midea Smart Cooling",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Midea Celest 2.0HP Inverter Split (FP-53AST020KEIV-F4)."
+  },
+  {
+    "id": 66,
+    "brand": "Midea",
+    "title": "Midea Pinnacle AG 1.0HP Inverter Split",
+    "type": "Split Inverter",
+    "price": "₱37,995",
+    rawPrice: 37995,
+    "hp": "1.0 HP",
+    "energy": "Inverter",
+    "gas": "R32",
+    "noise": "Low Noise",
+    "warranty": "Standard Warranty",
+    "tech": "Midea Smart Cooling",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Midea Pinnacle AG 1.0HP Inverter Split (FP-53AST010KEIVG4-)."
+  },
+  {
+    "id": 67,
+    "brand": "Panasonic",
+    "title": "Panasonic Premium Inverter 1.0HP Window Aircon",
+    "type": "Window Inverter",
+    "price": "₱39,399",
+    rawPrice: 39399,
+    "hp": "1.0 HP",
+    "energy": "Inverter",
+    "gas": "R32",
+    "noise": "Whisper Quiet",
+    "warranty": "Standard Warranty",
+    "tech": "nanoe™ X Technology",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Panasonic Premium Inverter 1.0HP Window Aircon (CW-XU1021VPH). Features nanoe™ X purification."
+  },
+  {
+    "id": 68,
+    "brand": "Panasonic",
+    "title": "Panasonic Premium Inverter 1.5HP Window Aircon",
+    "type": "Window Inverter",
+    "price": "₱41,499",
+    rawPrice: 41499,
+    "hp": "1.5 HP",
+    "energy": "Inverter",
+    "gas": "R32",
+    "noise": "Whisper Quiet",
+    "warranty": "Standard Warranty",
+    "tech": "nanoe™ X Technology",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Panasonic Premium Inverter 1.5HP Window Aircon (CW-XU1221VPH). Features nanoe™ X purification."
+  },
+  {
+    "id": 69,
+    "brand": "Panasonic",
+    "title": "Panasonic Premium Inverter 2.0HP Window Aircon",
+    "type": "Window Inverter",
+    "price": "₱54,499",
+    rawPrice: 54499,
+    "hp": "2.0 HP",
+    "energy": "Inverter",
+    "gas": "R32",
+    "noise": "Whisper Quiet",
+    "warranty": "Standard Warranty",
+    "tech": "nanoe™ X Technology",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Panasonic Premium Inverter 2.0HP Window Aircon (CW-XU1821EPH). Features nanoe™ X purification."
+  },
+  {
+    "id": 70,
+    "brand": "Panasonic",
+    "title": "Panasonic Compact Inverter 1.0HP Window Aircon",
+    "type": "Window Inverter",
+    "price": "₱32,999",
+    rawPrice: 32999,
+    "hp": "1.0 HP",
+    "energy": "Inverter",
+    "gas": "R32",
+    "noise": "Whisper Quiet",
+    "warranty": "Standard Warranty",
+    "tech": "nanoe™ X Technology",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Panasonic Compact Inverter 1.0HP Window Aircon (CW-U921JPH). Features nanoe™ X purification."
+  },
+  {
+    "id": 71,
+    "brand": "Panasonic",
+    "title": "Panasonic Standard 0.5HP Window Aircon",
+    "type": "Window Manual",
+    "price": "₱14,599",
+    rawPrice: 14599,
+    "hp": "0.5 HP",
+    "energy": "Standard",
+    "gas": "R32",
+    "noise": "Whisper Quiet",
+    "warranty": "Standard Warranty",
+    "tech": "nanoe™ X Technology",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Panasonic Standard 0.5HP Window Aircon (CW-N620JPH). Features nanoe™ X purification."
+  },
+  {
+    "id": 72,
+    "brand": "Panasonic",
+    "title": "Panasonic Standard 0.75HP Window Aircon",
+    "type": "Window Manual",
+    "price": "₱17,599",
+    rawPrice: 17599,
+    "hp": "0.75 HP",
+    "energy": "Standard",
+    "gas": "R32",
+    "noise": "Whisper Quiet",
+    "warranty": "Standard Warranty",
+    "tech": "nanoe™ X Technology",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Panasonic Standard 0.75HP Window Aircon (CW-N820JPH). Features nanoe™ X purification."
+  },
+  {
+    "id": 73,
+    "brand": "Panasonic",
+    "title": "Panasonic Standard 1.0HP Window Aircon",
+    "type": "Window Manual",
+    "price": "₱19,199",
+    rawPrice: 19199,
+    "hp": "1.0 HP",
+    "energy": "Standard",
+    "gas": "R32",
+    "noise": "Whisper Quiet",
+    "warranty": "Standard Warranty",
+    "tech": "nanoe™ X Technology",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Panasonic Standard 1.0HP Window Aircon (CW-N920JPH). Features nanoe™ X purification."
+  },
+  {
+    "id": 74,
+    "brand": "Panasonic",
+    "title": "Panasonic Premium Inverter 1.0HP Split",
+    "type": "Split Inverter",
+    "price": "₱48,599",
+    rawPrice: 48599,
+    "hp": "1.0 HP",
+    "energy": "Inverter",
+    "gas": "R32",
+    "noise": "Whisper Quiet",
+    "warranty": "Standard Warranty",
+    "tech": "nanoe™ X Technology",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Panasonic Premium Inverter 1.0HP Split (CS/CU-XU9XKQ). Features nanoe™ X purification."
+  },
+  {
+    "id": 75,
+    "brand": "Panasonic",
+    "title": "Panasonic Premium Inverter 1.5HP Split",
+    "type": "Split Inverter",
+    "price": "₱54,099",
+    rawPrice: 54099,
+    "hp": "1.5 HP",
+    "energy": "Inverter",
+    "gas": "R32",
+    "noise": "Whisper Quiet",
+    "warranty": "Standard Warranty",
+    "tech": "nanoe™ X Technology",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Panasonic Premium Inverter 1.5HP Split (CS/CU-XU12XKQ). Features nanoe™ X purification."
+  },
+  {
+    "id": 76,
+    "brand": "Panasonic",
+    "title": "Panasonic Standard Inverter 1.0HP Split",
+    "type": "Split Inverter",
+    "price": "₱39,499",
+    rawPrice: 39499,
+    "hp": "1.0 HP",
+    "energy": "Inverter",
+    "gas": "R32",
+    "noise": "Whisper Quiet",
+    "warranty": "Standard Warranty",
+    "tech": "nanoe™ X Technology",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Panasonic Standard Inverter 1.0HP Split (CS/CU-PU9WKQ). Features nanoe™ X purification."
+  },
+  {
+    "id": 77,
+    "brand": "Panasonic",
+    "title": "Panasonic Standard Inverter 1.5HP Split",
+    "type": "Split Inverter",
+    "price": "₱44,799",
+    rawPrice: 44799,
+    "hp": "1.5 HP",
+    "energy": "Inverter",
+    "gas": "R32",
+    "noise": "Whisper Quiet",
+    "warranty": "Standard Warranty",
+    "tech": "nanoe™ X Technology",
+    "img": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80",
+    "desc": "Panasonic Standard Inverter 1.5HP Split (CS/CU-PU12WKQ). Features nanoe™ X purification."
+  }
+];
+    // 2. SERVICES DATASET
+    const servicesData = [
+      {
+        title: 'Deep Chemical Aircon Cleaning',
+        price: 'Starts at ₱750',
+        icon: 'sparkles',
+        desc: 'Complete dismantling and high-pressure chemical wash to eliminate mold, bacteria, dust, and restore 100% cooling power.',
+        time: '45 - 60 mins'
+      },
+      {
+        title: 'Standard & Specialized Installation',
+        price: 'Starts at ₱3,500',
+        icon: 'wrench',
+        desc: 'Professional installation for Split Type and Window Type units including brackets, copper tubing, and vacuuming process.',
+        time: '2 - 3 Hours'
+      },
+      {
+        title: 'Freon Charging & Leak Repair',
+        price: 'Starts at ₱1,200',
+        icon: 'gauge',
+        desc: 'System pressure diagnostic, flare repair, nitrogen leak testing, and original R32 / R410A refrigerant re-charging.',
+        time: '1 Hour'
+      },
+      {
+        title: 'Commercial Refrigeration Maintenance',
+        price: 'Custom Quote',
+        icon: 'snowflake',
+        desc: 'Servicing for cold storage, walk-in freezers, chiller display cabinets, and commercial ice machines.',
+        time: 'On-site Inspection'
+      }
+    ];
+
+    // 3. SLIDESHOW DATASET
+    const slideshowItems = [
+      {
+        title: 'Premium Inverter Air Conditioning Units',
+        desc: 'Save up to 60% on electricity costs with top brands like Daikin, Carrier, LG, Panasonic & TCL. Available in stock now!',
+        bg: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=1920&q=80'
+      },
+      {
+        title: 'Professional Cleaning & Freon Service',
+        desc: 'Keep your indoor air fresh and bacteria-free. Schedule your deep chemical cleaning with YRME certified technicians.',
+        bg: 'https://images.unsplash.com/photo-1585338107529-13afc5f02586?auto=format&fit=crop&w=1920&q=80'
+      },
+      {
+        title: 'Commercial Aircon & Cold Storage Repair',
+        desc: 'Fast diagnostics, leak testing, compressor replacement, and preventive maintenance for business operations.',
+        bg: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=1920&q=80'
+      }
+    ];
+
+    // 4. STATE MANAGEMENT
+    let selectedBrand = 'ALL';
+    let selectedType = 'ALL';
+    let compareList = [];
+    let currentSlide = 0;
+
+    // Initialize UI on Load
+    document.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      renderBrandFilters();
+      renderTypeFilters();
+      renderProducts();
+      renderServices();
+      initIdleTimer();
+      startSlideshowLoop();
+    });
+
+    // GO TO HOME SCREEN FUNCTION
+    function goHome() {
+      switchTab('catalog');
+      setBrandFilter('ALL');
+      setTypeFilter('ALL');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // RENDER BRAND FILTERS
+    function renderBrandFilters() {
+      const brands = ['ALL', 'Daikin', 'Carrier', 'LG', 'Panasonic', 'TCL', 'Midea', 'Kolin', 'Samsung'];
+      const container = document.getElementById('brand-filters');
+      
+      container.innerHTML = brands.map(brand => `
+        <button onclick="setBrandFilter('${brand}')" 
+          class="px-5 py-2.5 rounded-xl font-extrabold text-sm transition whitespace-nowrap border ${
+            selectedBrand === brand 
+              ? 'bg-cyan-500 text-slate-950 border-cyan-400 shadow-lg shadow-cyan-500/30 scale-105' 
+              : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
+          }">
+          ${brand === 'ALL' ? '🌟 All Brands' : brand}
+        </button>
+      `).join('');
+    }
+
+    // RENDER TYPE FILTERS
+    function renderTypeFilters() {
+      const types = ['ALL', 'Split Inverter', 'Window Inverter'];
+      const container = document.getElementById('type-filters');
+      
+      container.innerHTML = types.map(type => `
+        <button onclick="setTypeFilter('${type}')" 
+          class="px-4 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap ${
+            selectedType === type 
+              ? 'bg-slate-700 text-cyan-300 border border-cyan-500/50' 
+              : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
+          }">
+          ${type === 'ALL' ? 'All Unit Types' : type}
+        </button>
+      `).join('');
+    }
+
+    // FILTER LOGIC
+    function setBrandFilter(brand) {
+      selectedBrand = brand;
+      renderBrandFilters();
+      renderProducts();
+    }
+
+    function setTypeFilter(type) {
+      selectedType = type;
+      renderTypeFilters();
+      renderProducts();
+    }
+
+    function getProductFeatures(product) {
+      return [product.energy, `${product.gas} Refrigerant`, product.noise, product.tech]
+        .filter(Boolean);
+    }
+
+    // RENDER PRODUCT CARDS
+    function renderProducts() {
+      const grid = document.getElementById('product-grid');
+      const filtered = productsData.filter(p => {
+        const matchBrand = selectedBrand === 'ALL' || p.brand === selectedBrand;
+        const matchType = selectedType === 'ALL' || p.type === selectedType;
+        return matchBrand && matchType;
+      });
+
+      document.getElementById('product-count-label').innerText = `Showing ${filtered.length} Aircon Units`;
+
+      grid.innerHTML = filtered.map(p => {
+        const isCompared = compareList.includes(p.id);
+        return `
+          <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden hover:border-cyan-500/50 transition-all shadow-xl flex flex-col justify-between group">
+            
+            <div>
+              <!-- Card Header / Image -->
+              <div class="relative h-52 bg-slate-950 overflow-hidden">
+                <img src="${p.img}" alt="${p.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500 opacity-90">
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent"></div>
+                
+                <!-- Brand Badge -->
+                <span class="absolute top-4 left-4 bg-slate-950/90 border border-slate-700 px-3 py-1 rounded-full text-xs font-black tracking-wider text-cyan-400 uppercase">
+                  ${p.brand}
+                </span>
+
+                <!-- HP Badge -->
+                <span class="absolute bottom-3 right-4 bg-cyan-500 text-slate-950 px-3 py-1 rounded-lg text-sm font-black shadow-md">
+                  ${p.hp}
+                </span>
+              </div>
+
+              <!-- Product Info -->
+              <div class="p-6 space-y-4">
+                <div>
+                  <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">${p.type}</span>
+                  <h3 class="text-xl font-extrabold text-white leading-snug mt-0.5">${p.title}</h3>
+                </div>
+
+                <!-- Feature Highlights -->
+                <ul class="space-y-1.5 text-xs text-slate-300">
+                  ${getProductFeatures(p).map(f => `<li class="flex items-center gap-2"><i data-lucide="check-circle" class="w-3.5 h-3.5 text-cyan-400 shrink-0"></i> ${f}</li>`).join('')}
+                </ul>
+              </div>
+            </div>
+
+            <!-- Price & Actions -->
+            <div class="p-6 pt-0 space-y-3">
+              <div class="flex items-baseline justify-between border-t border-slate-800/80 pt-4">
+                <span class="text-xs text-slate-400 uppercase font-semibold">SRP Price:</span>
+                <span class="text-2xl font-black text-cyan-300">${p.price}</span>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2">
+                <button onclick="openProductModal(${p.id})" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl text-xs transition flex items-center justify-center gap-1">
+                  <i data-lucide="info" class="w-4 h-4"></i> Details
+                </button>
+                <button onclick="toggleCompare(${p.id})" class="w-full py-2.5 ${isCompared ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400' : 'bg-slate-800 hover:bg-slate-700 text-slate-300'} font-bold rounded-xl text-xs transition flex items-center justify-center gap-1">
+                  <i data-lucide="sliders-horizontal" class="w-4 h-4"></i> ${isCompared ? 'Added' : 'Compare'}
+                </button>
+              </div>
+            </div>
+
+          </div>
+        `;
+      }).join('');
+
+      lucide.createIcons();
+    }
+
+    // RENDER SERVICES
+    function renderServices() {
+      const container = document.getElementById('services-grid');
+      container.innerHTML = servicesData.map(s => `
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4 hover:border-cyan-500/40 transition shadow-xl">
+          <div class="w-12 h-12 bg-cyan-500/10 border border-cyan-500/30 rounded-2xl flex items-center justify-center text-cyan-400">
+            <i data-lucide="${s.icon}" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <h3 class="text-xl font-extrabold text-white">${s.title}</h3>
+            <span class="text-cyan-400 font-bold text-sm">${s.price}</span>
+          </div>
+          <p class="text-slate-300 text-sm leading-relaxed">${s.desc}</p>
+          <div class="text-xs text-slate-500 font-semibold border-t border-slate-800 pt-3">
+            Est. Time: ${s.time}
+          </div>
+        </div>
+      `).join('');
+
+      lucide.createIcons();
+    }
+
+    // PRODUCT SPEC MODAL
+    function openProductModal(id) {
+      const p = productsData.find(item => item.id === id);
+      if (!p) return;
+
+      const content = document.getElementById('modal-content');
+      content.innerHTML = `
+        <div class="space-y-4">
+          <img src="${p.img}" alt="${p.title}" class="rounded-2xl w-full h-64 object-cover border border-slate-800">
+          <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-xs text-slate-400 space-y-1">
+            <div><strong class="text-slate-200">Warranty:</strong> ${p.warranty}</div>
+            <div><strong class="text-slate-200">Refrigerant:</strong> ${p.gas}</div>
+            <div><strong class="text-slate-200">Noise Level:</strong> ${p.noise}</div>
+          </div>
+        </div>
+        <div class="space-y-6">
+          <div>
+            <span class="text-xs font-bold text-cyan-400 uppercase tracking-widest">${p.brand} • ${p.type}</span>
+            <h2 class="text-3xl font-black text-white mt-1">${p.title}</h2>
+            <div class="text-3xl font-black text-cyan-300 mt-2">${p.price}</div>
+          </div>
+
+          <div class="space-y-2">
+            <h4 class="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Key Specifications</h4>
+            <ul class="space-y-2 text-sm text-slate-200">
+              ${getProductFeatures(p).map(f => `<li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-cyan-400"></i> ${f}</li>`).join('')}
+            </ul>
+          </div>
+
+          <div class="bg-cyan-950/30 border border-cyan-500/30 p-4 rounded-xl text-xs text-cyan-300 leading-relaxed">
+            💡 <strong>Showroom Tip:</strong> Speak with our staff at the counter to verify stock availability, installation scheduling, and bundle discounts.
+          </div>
+        </div>
+      `;
+
+      document.getElementById('product-modal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeProductModal() {
+      document.getElementById('product-modal').classList.add('hidden');
+    }
+
+    // COMPARE FUNCTIONALITY
+    function toggleCompare(id) {
+      if (compareList.includes(id)) {
+        compareList = compareList.filter(item => item !== id);
+      } else {
+        if (compareList.length >= 3) {
+          alert('You can compare up to 3 units at a time.');
+          return;
+        }
+        compareList.push(id);
+      }
+      document.getElementById('compare-count').innerText = compareList.length;
+      renderProducts();
+    }
+
+    function toggleCompareModal() {
+      const modal = document.getElementById('compare-modal');
+      const container = document.getElementById('compare-cards');
+
+      if (compareList.length === 0) {
+        alert('Please click "Compare" on at least one aircon unit first.');
+        return;
+      }
+
+      const items = productsData.filter(p => compareList.includes(p.id));
+
+      container.innerHTML = items.map(p => `
+        <div class="bg-slate-950 border border-slate-800 rounded-2xl p-6 space-y-4 relative">
+          <button onclick="toggleCompare('${p.id}'); toggleCompareModal();" class="absolute top-4 right-4 text-slate-500 hover:text-white">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+          </button>
+          <img src="${p.img}" class="w-full h-36 object-cover rounded-xl">
+          <div>
+            <span class="text-xs font-bold text-cyan-400">${p.brand}</span>
+            <h4 class="text-lg font-bold text-white">${p.title}</h4>
+            <div class="text-xl font-black text-cyan-300 mt-1">${p.price}</div>
+          </div>
+          <div class="space-y-2 text-xs text-slate-300 border-t border-slate-800 pt-3">
+            <div><strong>Capacity:</strong> ${p.hp}</div>
+            <div><strong>Type:</strong> ${p.type}</div>
+            <div><strong>Noise:</strong> ${p.noise}</div>
+            <div><strong>Warranty:</strong> ${p.warranty}</div>
+          </div>
+        </div>
+      `).join('');
+
+      modal.classList.toggle('hidden');
+      lucide.createIcons();
+    }
+
+    // CALCULATOR LOGIC
+    function updateCalculator(sqm) {
+      document.getElementById('area-display').innerText = `${sqm} sq.m`;
+      
+      let hp = '1.0 HP';
+      let price = '₱20,000 - ₱28,000';
+      
+      if (sqm <= 12) {
+        hp = '0.5 HP - 0.75 HP';
+        price = '₱14,000 - ₱19,000';
+      } else if (sqm <= 18) {
+        hp = '1.0 HP';
+        price = '₱19,000 - ₱31,000';
+      } else if (sqm <= 25) {
+        hp = '1.5 HP';
+        price = '₱28,000 - ₱39,000';
+      } else if (sqm <= 36) {
+        hp = '2.0 HP';
+        price = '₱38,000 - ₱49,000';
+      } else {
+        hp = '2.5 HP - 3.0 HP';
+        price = '₱52,000 - ₱75,000+';
+      }
+
+      document.getElementById('rec-hp').innerText = hp;
+      document.getElementById('rec-price').innerText = price;
+    }
+
+    // TAB NAVIGATION
+    function switchTab(tab) {
+      ['catalog', 'services', 'calculator'].forEach(t => {
+        document.getElementById(`tab-${t}`).classList.add('hidden');
+        document.getElementById(`nav-${t}`).className = 'px-5 py-2 rounded-lg font-bold text-base transition flex items-center gap-2 bg-slate-800 text-slate-300 hover:bg-slate-700';
+      });
+
+      document.getElementById(`tab-${tab}`).classList.remove('hidden');
+      document.getElementById(`nav-${tab}`).className = 'px-5 py-2 rounded-lg font-bold text-base transition flex items-center gap-2 bg-cyan-500 text-slate-950 shadow-lg shadow-cyan-500/20';
+    }
+
+    // IDLE TIMER & SLIDESHOW CONTROLLER
+    let idleTimer;
+    const idleSlideshow = document.getElementById('idle-slideshow');
+
+    function resetIdleTimer() {
+      idleSlideshow.classList.add('opacity-0', 'pointer-events-none');
+      
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(() => {
+        idleSlideshow.classList.remove('opacity-0', 'pointer-events-none');
+      }, 30000);
+    }
+
+    function initIdleTimer() {
+      window.onload = resetIdleTimer;
+      window.onmousemove = resetIdleTimer;
+      window.onmousedown = resetIdleTimer;
+      window.ontouchstart = resetIdleTimer;
+      window.onclick = resetIdleTimer;
+      window.onkeydown = resetIdleTimer;
+    }
+
+    function startSlideshowLoop() {
+      setInterval(() => {
+        currentSlide = (currentSlide + 1) % slideshowItems.length;
+        const item = slideshowItems[currentSlide];
+
+        const titleEl = document.getElementById('slideshow-title');
+        const descEl = document.getElementById('slideshow-desc');
+        const bgEl = document.getElementById('slideshow-bg');
+
+        if (titleEl && descEl && bgEl) {
+          titleEl.innerText = item.title;
+          descEl.innerText = item.desc;
+          bgEl.style.backgroundImage = `url('${item.bg}')`;
+
+          for (let i = 0; i < 3; i++) {
+            const dot = document.getElementById(`dot-${i}`);
+            if (dot) {
+              if (i === currentSlide) {
+                dot.className = 'w-12 h-3 bg-cyan-400 rounded-full transition-all duration-300';
+              } else {
+                dot.className = 'w-3 h-3 bg-slate-700 rounded-full transition-all duration-300';
+              }
+            }
+          }
+        }
+      }, 5000);
+    }
+  </script>
+</body>
+</html>
