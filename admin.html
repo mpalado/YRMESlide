@@ -1,0 +1,1569 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YRME Refrigeration and Airconditioning Services | Admin</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.2/dist/umd/supabase.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@1.77.0/dist/umd/lucide.min.js"></script>
+  <style>
+    :root {
+      --navy: #0b1725;
+      --navy-2: #112338;
+      --teal: #19c3b1;
+      --teal-dark: #087e76;
+      --canvas: #f2f6f8;
+      --line: #dfe7ec;
+      --text: #13212d;
+      --muted: #71808d;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, Segoe UI, Arial, sans-serif;
+      background: var(--canvas);
+      color: var(--text);
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    #admin-login {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: var(--navy);
+      display: grid;
+      grid-template-columns: 1.05fr .95fr;
+    }
+
+    .login-visual {
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 48px;
+      color: white;
+      background: linear-gradient(145deg, #071827, #0b2c3d 58%, #0a5661);
+    }
+
+    .login-visual:after {
+      content: "";
+      position: absolute;
+      width: 420px;
+      height: 420px;
+      right: -180px;
+      bottom: -220px;
+      border: 1px solid rgba(25, 195, 177, .2);
+      border-radius: 50%;
+    }
+
+    .login-mark,
+    .admin-mark {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .login-mark svg,
+    .admin-mark svg {
+      width: 48px;
+      height: 48px;
+    }
+
+    .login-copy {
+      max-width: 560px;
+    }
+
+    .login-copy span {
+      color: #69ddd1;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+    }
+
+    .login-copy h1 {
+      margin: 16px 0;
+      font-size: 52px;
+      line-height: 1.05;
+      letter-spacing: -.04em;
+    }
+
+    .login-copy p {
+      color: #bdd0d7;
+      font-size: 17px;
+      line-height: 1.7;
+    }
+
+    .login-panel {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: white;
+      padding: 40px;
+    }
+
+    .login-form {
+      width: min(390px, 100%);
+      display: grid;
+      gap: 18px;
+    }
+
+    .login-form h2 {
+      margin: 0;
+      font-size: 32px;
+    }
+
+    .login-form p {
+      margin: 6px 0 0;
+      color: var(--muted);
+    }
+
+    .login-field label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .login-field input {
+      width: 100%;
+      height: 50px;
+      border: 1px solid #d9e2e7;
+      border-radius: 12px;
+      padding: 0 44px 0 16px;
+    }
+
+    .password-wrap {
+      position: relative;
+    }
+
+    .password-wrap button {
+      position: absolute;
+      right: 8px;
+      top: 8px;
+      width: 34px;
+      height: 34px;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+    }
+
+    .login-form button[type=submit] {
+      height: 52px;
+      border: 0;
+      border-radius: 12px;
+      background: var(--teal);
+      color: #09211f;
+      font-weight: 900;
+    }
+
+    #login-error {
+      margin: 0;
+      padding: 12px;
+      border: 1px solid #fecaca;
+      background: #fff1f2;
+      color: #b91c1c;
+      border-radius: 10px;
+      font-size: 13px;
+    }
+
+    #admin-content {
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      position: fixed;
+      z-index: 40;
+      inset: 0 auto 0 0;
+      width: 238px;
+      background: var(--navy);
+      color: white;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar-brand {
+      height: 82px;
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, .07);
+    }
+
+    .sidebar-brand svg {
+      width: 48px;
+      height: 48px;
+    }
+
+    .brand-name {
+      font-size: 16px;
+      font-weight: 900;
+      letter-spacing: .04em;
+    }
+
+    .brand-sub {
+      margin-top: 3px;
+      font-size: 9px;
+      color: #72879a;
+      text-transform: uppercase;
+      letter-spacing: .16em;
+    }
+
+    .sidebar-nav {
+      padding: 16px 12px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .side-link {
+      height: 46px;
+      border: 0;
+      border-radius: 10px;
+      padding: 0 14px;
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      color: #91a1af;
+      background: transparent;
+      text-decoration: none;
+      font-weight: 800;
+      font-size: 14px;
+    }
+
+    .side-link.active {
+      color: #67ddd1;
+      background: rgba(25, 195, 177, .10);
+      border: 1px solid rgba(25, 195, 177, .12);
+    }
+
+    .side-link:hover {
+      background: rgba(255, 255, 255, .05);
+      color: white;
+    }
+
+    .sidebar-user {
+      margin-top: auto;
+      border-top: 1px solid rgba(255, 255, 255, .07);
+      padding: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: #26394a;
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+    }
+
+    .user-text {
+      flex: 1;
+    }
+
+    .user-text strong {
+      display: block;
+      font-size: 13px;
+    }
+
+    .user-text span {
+      color: #58cbba;
+      font-size: 11px;
+    }
+
+    #logout-btn {
+      width: 38px;
+      height: 38px;
+      border: 0;
+      border-radius: 9px;
+      background: transparent;
+      color: #7f93a3;
+    }
+
+    .shell {
+      margin-left: 238px;
+      min-height: 100vh;
+    }
+
+    .topbar {
+      height: 82px;
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      background: white;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 30px;
+    }
+
+    .topbar-label {
+      color: #94a0aa;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .topbar h1 {
+      margin: 3px 0 0;
+      font-size: 22px;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .action-btn {
+      min-height: 44px;
+      border-radius: 11px;
+      padding: 0 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 900;
+      font-size: 13px;
+    }
+
+    .action-btn.secondary {
+      border: 1px solid var(--line);
+      background: white;
+      color: #526270;
+    }
+
+    .action-btn.primary {
+      border: 0;
+      background: var(--teal);
+      color: #09211f;
+      box-shadow: 0 8px 20px rgba(25, 195, 177, .18);
+    }
+
+    main {
+      padding: 24px 30px 40px;
+    }
+
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .kpi {
+      min-height: 112px;
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 17px 18px;
+    }
+
+    .kpi-label {
+      color: #82909b;
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .kpi-value {
+      margin-top: 12px;
+      font-size: 29px;
+      line-height: 1;
+      font-weight: 950;
+    }
+
+    #brand-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 11px;
+    }
+
+    .brand-logo-badge {
+      border-radius: 7px;
+      padding: 5px 7px;
+      font-size: 9px;
+      line-height: 1;
+      font-weight: 950;
+      text-transform: uppercase;
+      letter-spacing: .02em;
+    }
+
+    .sync-live {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #14866f;
+      font-size: 16px;
+    }
+
+    .sync-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #20b486;
+      box-shadow: 0 0 0 5px rgba(32, 180, 134, .10);
+    }
+
+    .inventory {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .inventory-head {
+      padding: 18px 20px 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .inventory-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .inventory-title h2 {
+      margin: 0;
+      font-size: 17px;
+    }
+
+    #product-count {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .search-row {
+      display: flex;
+      width: min(390px, 48vw);
+      gap: 8px;
+      align-items: center;
+    }
+
+    .search-box>i,
+    .search-box>svg {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #94a3ad;
+      width: 17px;
+      height: 17px;
+      pointer-events: none;
+    }
+
+    #catalog-search {
+      width: 100%;
+      height: 44px;
+      border: 1px solid var(--line);
+      background: #f8fafb;
+      border-radius: 10px;
+      padding: 0 12px 0 38px;
+      outline: none;
+    }
+
+    #catalog-search:focus {
+      border-color: var(--teal);
+      box-shadow: 0 0 0 3px rgba(25, 195, 177, .10);
+    }
+
+    .icon-btn {
+      flex: 0 0 44px;
+      width: 44px;
+      height: 44px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: white;
+      color: #667784;
+      display: grid;
+      place-items: center;
+    }
+
+    .filters {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 13px 20px 15px;
+      scrollbar-width: none;
+    }
+
+    .filters::-webkit-scrollbar {
+      display: none;
+    }
+
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: max-content;
+    }
+
+    .filter-label {
+      color: #9aa5ad;
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+      margin-right: 2px;
+    }
+
+    .filter-pill {
+      min-height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: white;
+      color: #657581;
+      padding: 0 12px;
+      font-size: 12px;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .filter-pill.active {
+      border-color: #9edfd8;
+      background: #dff7f3;
+      color: #087a70;
+    }
+
+    .filter-divider {
+      width: 1px;
+      height: 28px;
+      background: var(--line);
+      margin: 0 4px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 880px;
+    }
+
+    th {
+      height: 44px;
+      padding: 0 16px;
+      text-align: left;
+      background: #f8fafb;
+      border-bottom: 1px solid var(--line);
+      color: #8a98a3;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+    }
+
+    td {
+      height: 82px;
+      padding: 10px 16px;
+      border-bottom: 1px solid #edf1f3;
+      vertical-align: middle;
+    }
+
+    tbody tr:hover {
+      background: #fafffe;
+    }
+
+    .product-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .product-thumb {
+      width: 64px;
+      height: 52px;
+      border-radius: 9px;
+      object-fit: cover;
+      border: 1px solid var(--line);
+      background: #eef3f4;
+    }
+
+    .brand-badge {
+      display: inline-flex;
+      border-radius: 999px;
+      padding: 4px 7px;
+      font-size: 9px;
+      font-weight: 950;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+
+    .brand-Matrix {
+      background: #daf5f1;
+      color: #087d72;
+    }
+
+    .brand-Panasonic {
+      background: #dcf1df;
+      color: #27823a;
+    }
+
+    .brand-Daikin {
+      background: #dbeafe;
+      color: #2463a9;
+    }
+
+    .brand-Koppel {
+      background: #ffead0;
+      color: #a96816;
+    }
+
+    .brand-Midea {
+      background: #e5e7ff;
+      color: #565eae;
+    }
+
+    .brand-AUX {
+      background: #ffe0e7;
+      color: #ad3e5e;
+    }
+
+    .brand-Carrier {
+      background: #e0f2fe;
+      color: #1d67a8;
+    }
+
+    .brand-LG {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+
+    .brand-Kolin {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    .brand-Samsung {
+      background: #e7efff;
+      color: #315da8;
+    }
+
+    .brand-HK {
+      background: #ede9fe;
+      color: #6d28d9;
+    }
+
+    .brand-AUFIT {
+      background: #cffafe;
+      color: #0e7490;
+    }
+
+    .brand-default {
+      background: #edf2f4;
+      color: #60717d;
+    }
+
+    .product-name {
+      max-width: 260px;
+      font-size: 13px;
+      font-weight: 900;
+      line-height: 1.35;
+    }
+
+    .capacity {
+      font-size: 13px;
+      font-weight: 950;
+    }
+
+    .type-badge {
+      display: inline-block;
+      margin-top: 6px;
+      border-radius: 7px;
+      background: #eef3f5;
+      color: #667781;
+      padding: 5px 7px;
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .price {
+      font-size: 14px;
+      font-weight: 950;
+    }
+
+    .stock-line {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .stock-badge {
+      border-radius: 999px;
+      padding: 5px 8px;
+      font-size: 10px;
+      font-weight: 900;
+    }
+
+    .in-stock {
+      background: #daf5e8;
+      color: #14734f;
+    }
+
+    .low-stock {
+      background: #fff1c7;
+      color: #9a6900;
+    }
+
+    .out-stock {
+      background: #ffe1e1;
+      color: #ad3535;
+    }
+
+    .warranty {
+      margin-top: 6px;
+      color: #82909a;
+      font-size: 10px;
+    }
+
+    .row-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 7px;
+    }
+
+    .row-btn {
+      min-width: 76px;
+      height: 38px;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .edit-btn {
+      border: 1px solid #bde4df;
+      background: #f1fbf9;
+      color: #087d72;
+    }
+
+    .delete-btn {
+      border: 1px solid #f1d2d2;
+      background: #fffafa;
+      color: #b44a4a;
+    }
+
+    .pagination {
+      min-height: 64px;
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    #pagination-summary {
+      color: #7f8c96;
+      font-size: 12px;
+    }
+
+    .page-actions {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .page-btn {
+      min-width: 42px;
+      height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: white;
+      color: #63727e;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .page-btn.active {
+      border-color: var(--teal);
+      background: var(--teal);
+      color: #09211f;
+    }
+
+    .page-btn:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+    }
+
+    #product-modal {
+      position: fixed;
+      z-index: 80;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(9, 23, 34, .48);
+      backdrop-filter: blur(4px);
+    }
+
+    .modal-card {
+      width: min(980px, 100%);
+      max-height: 94vh;
+      display: flex;
+      flex-direction: column;
+      background: white;
+      border-radius: 18px;
+      box-shadow: 0 24px 70px rgba(12, 30, 43, .24);
+      overflow: hidden;
+    }
+
+    .modal-header {
+      height: 72px;
+      flex: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .modal-header p {
+      margin: 0 0 3px;
+      color: #15998d;
+      font-size: 9px;
+      font-weight: 950;
+      text-transform: uppercase;
+      letter-spacing: .16em;
+    }
+
+    .modal-header h2 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    #close-modal {
+      width: 40px;
+      height: 40px;
+      border: 0;
+      border-radius: 9px;
+      background: #f1f5f6;
+      color: #71808a;
+    }
+
+    #product-form {
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .modal-body {
+      overflow-y: auto;
+      padding: 22px 24px;
+    }
+
+    .modal-grid {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 22px;
+    }
+
+    .image-panel label,
+    .field label {
+      display: block;
+      color: #687985;
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 7px;
+    }
+
+    .image-drop {
+      border: 1px dashed #ccd8df;
+      border-radius: 13px;
+      background: #f8fafb;
+      padding: 10px;
+    }
+
+    #image-preview {
+      width: 100%;
+      height: 170px;
+      object-fit: cover;
+      border-radius: 9px;
+    }
+
+    #image-placeholder {
+      height: 170px;
+      display: grid;
+      place-content: center;
+      text-align: center;
+      color: #9aa7b0;
+      border-radius: 9px;
+      background: #edf3f4;
+    }
+
+    #image-file {
+      width: 100%;
+      margin-top: 10px;
+      font-size: 10px;
+    }
+
+    #image-file::file-selector-button {
+      border: 0;
+      border-radius: 8px;
+      background: var(--navy);
+      color: white;
+      padding: 8px 10px;
+      margin-right: 7px;
+      font-weight: 850;
+    }
+
+    #img {
+      width: 100%;
+      height: 42px;
+      margin-top: 9px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      padding: 0 10px;
+      font-size: 12px;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .field select,
+    .field input,
+    .field textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: #f9fbfc;
+      color: var(--text);
+      outline: none;
+    }
+
+    .field select,
+    .field input {
+      height: 44px;
+      padding: 0 11px;
+    }
+
+    .field textarea {
+      min-height: 74px;
+      padding: 10px 11px;
+      resize: vertical;
+    }
+
+    .field select:focus,
+    .field input:focus,
+    .field textarea:focus {
+      border-color: var(--teal);
+      box-shadow: 0 0 0 3px rgba(25, 195, 177, .10);
+    }
+
+    .stock-control {
+      grid-column: 1/-1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border: 1px solid var(--line);
+      background: #f8fafb;
+      border-radius: 11px;
+      padding: 12px 14px;
+    }
+
+    .stock-control strong {
+      display: block;
+      font-size: 13px;
+    }
+
+    .stock-control span {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .toggle {
+      width: 54px;
+      height: 30px;
+      border: 0;
+      border-radius: 999px;
+      background: #cbd5dc;
+      padding: 3px;
+      transition: .18s;
+    }
+
+    .toggle:after {
+      content: "";
+      display: block;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: white;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, .15);
+      transition: .18s;
+    }
+
+    .toggle.on {
+      background: var(--teal);
+    }
+
+    .toggle.on:after {
+      transform: translateX(24px);
+    }
+
+    .modal-footer {
+      flex: none;
+      height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 9px;
+      padding: 0 24px;
+      border-top: 1px solid var(--line);
+      background: white;
+    }
+
+    .modal-footer button {
+      min-width: 120px;
+      height: 44px;
+      border-radius: 10px;
+      font-weight: 900;
+    }
+
+    #cancel-edit {
+      border: 1px solid var(--line);
+      background: white;
+      color: #667783;
+    }
+
+    #save-product-btn {
+      border: 0;
+      background: var(--teal);
+      color: #09211f;
+    }
+
+    .mobile-menu {
+      display: none;
+    }
+@media (max-width:420px) {
+  #catalog-search {
+    font-size: 12px;
+    padding-left: 34px;
+    padding-right: 8px;
+  }
+  .search-box > i,
+  .search-box > svg {
+    left: 10px;
+    width: 15px;
+    height: 15px;
+  }
+  /* ...rest of your 420px rules */
+}
+    @media (max-width:1100px) {
+      .kpis {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .sidebar {
+        width: 210px;
+      }
+
+      .shell {
+        margin-left: 210px;
+      }
+    }
+
+    @media (max-width:760px) {
+      #admin-login {
+        grid-template-columns: 1fr;
+      }
+
+      .login-visual {
+        display: none;
+      }
+
+      .login-panel {
+        background: var(--navy);
+      }
+
+      .login-form h2 {
+        color: white;
+      }
+
+      .login-field label {
+        color: #b9c5cc;
+      }
+
+      .login-field input {
+        background: #112236;
+        border-color: #294052;
+        color: white;
+      }
+
+      .sidebar {
+        display: none;
+      }
+
+      .shell {
+        margin-left: 0;
+      }
+
+      .topbar {
+        height: auto;
+        min-height: 72px;
+        padding: 12px 14px;
+      }
+
+      .topbar h1 {
+        font-size: 17px;
+      }
+
+      .action-btn.secondary span {
+        display: none;
+      }
+
+      main {
+        padding: 14px;
+      }
+
+      .kpis {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .kpi {
+        min-height: 96px;
+        padding: 14px;
+      }
+
+      .kpi-value {
+        font-size: 24px;
+      }
+
+      .inventory-head {
+        padding: 14px;
+      }
+
+      .inventory-title {
+        align-items: flex-start;
+      }
+
+      .search-row {
+        width: 100%;
+        margin-top: 10px;
+      }
+
+      .search-box {
+        width: auto;
+      }
+
+      .filters {
+        padding: 10px 14px 12px;
+      }
+
+      .modal-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .field-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .stock-control {
+        grid-column: auto;
+      }
+
+      .modal-card {
+        max-height: 96vh;
+      }
+
+      #product-modal {
+        padding: 8px;
+      }
+
+      .modal-body {
+        padding: 16px;
+      }
+
+      .modal-footer {
+        height: 68px;
+        padding: 0 16px;
+      }
+
+      .modal-footer button {
+        min-width: 110px;
+      }
+
+      .inventory-title {
+        flex-direction: column;
+        width: 100%;
+      }
+
+      .search-row {
+        width: 100%;
+      }
+
+      .search-box {
+        width: auto;
+        flex: 1;
+      }
+
+      .pagination {
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      #pagination-summary {
+        width: 100%;
+      }
+
+      .page-actions {
+        width: 100%;
+        justify-content: flex-end;
+      }
+
+      .topbar {
+        gap: 8px;
+      }
+
+      .header-actions {
+        gap: 6px;
+      }
+
+      .action-btn {
+        padding: 0 10px;
+      }
+
+      .action-btn.secondary {
+        min-width: 44px;
+        justify-content: center;
+      }
+
+      .action-btn.primary {
+        min-width: 44px;
+        justify-content: center;
+      }
+
+      .action-btn span {
+        display: none;
+      }
+    }
+
+    @media (max-width:420px) {
+      #catalog-search {
+        font-size: 12px;
+        padding-left: 34px;
+        padding-right: 8px;
+      }
+
+      .search-box>i {
+        left: 10px;
+        width: 15px;
+        height: 15px;
+      }
+
+      .icon-btn {
+        flex-basis: 42px;
+        width: 42px;
+        height: 44px;
+      }
+
+      .kpis {
+        grid-template-columns: 1fr;
+      }
+
+      .kpi {
+        min-height: 88px;
+      }
+
+      .topbar h1 {
+        font-size: 15px;
+      }
+
+      .topbar-label {
+        font-size: 10px;
+      }
+
+      .modal-header {
+        padding: 0 14px;
+      }
+
+      .modal-footer {
+        padding: 0 10px;
+      }
+
+      .modal-footer button {
+        min-width: 0;
+        flex: 1;
+      }
+
+      #pagination-actions .page-btn:not(.active):not([id]) {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="admin-login">
+    <section class="login-visual">
+      <div class="login-mark">
+        <svg viewBox="0 0 64 64" fill="none" aria-label="YRME logo">
+          <circle cx="32" cy="32" r="27" stroke="#19c3b1" stroke-width="3" />
+          <path d="M32 10v44M10 32h44M17 17l30 30M47 17L17 47" stroke="#19c3b1" stroke-width="3" />
+          <circle cx="32" cy="32" r="8" fill="#0b1725" stroke="#19c3b1" stroke-width="3" />
+          <path d="M32 24l5 8-5 8-5-8 5-8Z" fill="#19c3b1" />
+        </svg>
+        <div><strong>YRME</strong><br><small>Refrigeration &amp; Airconditioning</small></div>
+      </div>
+      <div class="login-copy"><span>Catalog Management</span>
+        <h1>Manage inventory with confidence.</h1>
+        <p>A dedicated workspace for YRME products, pricing, stock, and specifications.</p>
+      </div>
+      <small>YRME ADMIN CONSOLE</small>
+    </section>
+    <section class="login-panel">
+      <form id="login-form" class="login-form">
+        <div>
+          <h2>Welcome back</h2>
+          <p>Sign in to YRME Administration</p>
+        </div>
+        <div class="login-field"><label for="login-username">Email address</label><input id="login-username"
+            type="email" autocomplete="email" value="sample1@gmail.com" required></div>
+        <div class="login-field"><label for="login-password">Password</label>
+          <div class="password-wrap"><input id="login-password" type="password" autocomplete="current-password"
+              required><button id="toggle-password" type="button" title="Show password"><i
+                data-lucide="eye"></i></button></div>
+        </div>
+        <label><input id="remember-login" type="checkbox"> Keep me signed in</label>
+        <p id="login-error" class="hidden"></p>
+        <button type="submit" id="login-button">Sign in</button>
+      </form>
+    </section>
+  </div>
+
+  <div id="admin-content" class="hidden">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <svg viewBox="0 0 64 64" fill="none" aria-label="YRME logo">
+          <circle cx="32" cy="32" r="27" stroke="#19c3b1" stroke-width="3" />
+          <path d="M32 10v44M10 32h44M17 17l30 30M47 17L17 47" stroke="#19c3b1" stroke-width="3" />
+          <circle cx="32" cy="32" r="8" fill="#0b1725" stroke="#19c3b1" stroke-width="3" />
+          <path d="M32 24l5 8-5 8-5-8 5-8Z" fill="#19c3b1" />
+        </svg>
+        <div>
+          <div class="brand-name">YRME</div>
+          <div class="brand-sub">Admin Console</div>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <button class="side-link active"><i data-lucide="package"></i> Products</button>
+        <a class="side-link" href="index.html"><i data-lucide="store"></i> View Store</a>
+      </nav>
+      <div class="sidebar-user">
+        <div class="avatar">A</div>
+        <div class="user-text"><strong>Administrator</strong><span>Online</span></div>
+        <button id="logout-btn" title="Logout"><i data-lucide="log-out"></i></button>
+      </div>
+    </aside>
+
+    <section class="shell">
+      <header class="topbar">
+        <div>
+          <div class="topbar-label">Workspace</div>
+          <h1>Product Catalog</h1>
+        </div>
+        <div class="header-actions">
+          <button id="export-btn" class="action-btn secondary"><i data-lucide="download"></i><span>Export
+              CSV</span></button>
+          <button id="seed-catalog-btn" class="action-btn secondary"><i data-lucide="database"></i><span>Seed
+              Catalog</span></button>
+          <button id="open-add-btn" class="action-btn primary"><i data-lucide="plus"></i><span>Add
+              Product</span></button>
+        </div>
+      </header>
+
+      <main>
+        <section class="kpis">
+          <div class="kpi">
+            <div class="kpi-label">Total Products</div>
+            <div id="stat-total" class="kpi-value">0</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Active Brands</div>
+            <div id="brand-badges"></div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Inverters</div>
+            <div id="stat-inverters" class="kpi-value">0</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Sync Status</div>
+            <div class="kpi-value sync-live"><span class="sync-dot"></span> Live</div>
+          </div>
+        </section>
+
+        <section class="inventory">
+          <div class="inventory-head">
+            <div class="inventory-title">
+              <div>
+                <h2>Aircon inventory</h2>
+                <div id="product-count"></div>
+              </div>
+              <div class="search-row">
+                <div class="search-box"><i data-lucide="search"></i><input id="catalog-search"
+                    placeholder="Search by code, brand, or capacity..."></div>
+                <button id="scan-btn" class="icon-btn" title="Scan barcode or QR code"><i
+                    data-lucide="scan-barcode"></i></button>
+                <input id="scan-file" type="file" accept="image/*" capture="environment" class="hidden">
+              </div>
+            </div>
+          </div>
+          <div class="filters">
+            <div id="brand-filters" class="filter-group"><span class="filter-label">Brand</span></div>
+            <span class="filter-divider"></span>
+            <div id="type-filters" class="filter-group"><span class="filter-label">Type</span></div>
+          </div>
+          <div class="table-wrap" id="admin-products"></div>
+          <div class="pagination">
+            <span id="pagination-summary"></span>
+            <div id="pagination-actions" class="page-actions"></div>
+          </div>
+        </section>
+      </main>
+    </section>
+  </div>
+
+  <div id="product-modal" class="hidden">
+    <div class="modal-card">
+      <header class="modal-header">
+        <div>
+          <p>Catalog editor</p>
+          <h2 id="form-title">Add product</h2>
+        </div><button id="close-modal" type="button" title="Close"><i data-lucide="x"></i></button>
+      </header>
+      <form id="product-form">
+        <input type="hidden" id="product-id">
+        <div class="modal-body">
+          <div class="modal-grid">
+            <aside class="image-panel">
+              <label>Product image</label>
+              <div class="image-drop">
+                <img id="image-preview" class="hidden" alt="Product preview">
+                <div id="image-placeholder"><i data-lucide="image"></i><b>No image selected</b></div>
+                <input id="image-file" type="file" accept="image/*">
+              </div>
+              <input id="img" type="url" placeholder="Or paste an image URL">
+            </aside>
+            <div class="field-grid">
+              <div class="field"><label for="brand">Brand</label><select id="brand" required>
+                  <option value="">Select brand</option>
+                  <option>Matrix</option>
+                  <option>HK</option>
+                  <option>AUFIT</option>
+                  <option>AUX</option>
+                  <option>Carrier</option>
+                  <option>LG</option>
+                  <option>Panasonic</option>
+                  <option>Kolin</option>
+                  <option>Samsung</option>
+                  <option>Daikin</option>
+                  <option>Koppel</option>
+                  <option>Midea</option>
+                  <option>TCL</option>
+                </select></div>
+              <div class="field"><label for="title">Model name / code</label><input id="title" required
+                  placeholder="Example: FTKC25DVM"></div>
+              <div class="field"><label for="rawPrice">Numeric price</label><input id="rawPrice" type="number" min="0"
+                  required placeholder="30000"></div>
+              <div class="field"><label for="price">Display price</label><input id="price" required
+                  placeholder="₱30,000" readonly></div>
+              <div class="field"><label for="hp">Capacity</label><select id="hp" required>
+                  <option value="">Select capacity</option>
+                  <option>0.5 HP</option>
+                  <option>0.75 HP</option>
+                  <option>1.0 HP</option>
+                  <option>1.5 HP</option>
+                  <option>2.0 HP</option>
+                  <option>2.5 HP</option>
+                  <option>3.0 HP</option>
+                  <option>1.0 TR</option>
+                  <option>1.5 TR</option>
+                  <option>2.0 TR</option>
+                  <option>2.5 TR</option>
+                  <option>3.0 TR</option>
+                  <option>5.0 TR</option>
+                </select></div>
+              <div class="field"><label for="type">Unit type</label><select id="type" required>
+                  <option value="">Select unit type</option>
+                  <option>Split Inverter</option>
+                  <option>Window Inverter</option>
+                  <option>Window Manual</option>
+                  <option>Floor Standing</option>
+                  <option>Ceiling Cassette</option>
+                </select></div>
+              <div class="field"><label for="energy">Efficiency</label><select id="energy">
+                  <option>Inverter</option>
+                  <option>Standard Efficiency</option>
+                  <option>Non-Inverter</option>
+                </select></div>
+              <div class="field"><label for="gas">Refrigerant</label><select id="gas">
+                  <option>R32</option>
+                  <option>R410A</option>
+                </select></div>
+              <div class="field"><label for="noise">Noise level</label><input id="noise" placeholder="Quiet Operation">
+              </div>
+              <div class="field"><label for="warranty">Warranty</label><select id="warranty">
+                  <option>1 Year Parts &amp; Service</option>
+                  <option>2 Years Parts &amp; Service</option>
+                  <option>5 Years Compressor</option>
+                  <option>Standard Warranty</option>
+                  <option>No Warranty</option>
+                </select></div>
+              <div class="field"><label for="tech">Technology</label><input id="tech" placeholder="Smart Control"></div>
+              <div class="stock-control">
+                <div><strong>Stock Status</strong><span id="stock-status-text">Item is available for sale</span></div>
+                <button id="stock-toggle" type="button" class="toggle on" aria-label="Stock status"
+                  aria-pressed="true"></button><input id="stock_status" type="hidden" value="in_stock">
+              </div>
+              <div class="field" style="grid-column:1/-1"><label for="desc">Description</label><textarea id="desc"
+                  required rows="3" placeholder="Enter product description"></textarea></div>
+            </div>
+          </div>
+        </div>
+        <footer class="modal-footer"><button id="cancel-edit" type="button">Cancel</button><button id="save-product-btn"
+            type="submit"><span id="save-label">Save Product</span></button></footer>
+      </form>
+    </div>
+  </div>
+
+  <script src="supabase-config.js"></script>
+  <script src="supabase-catalog.js"></script>
+  <script src="auth.js"></script>
+  <script src="catalog-data.js"></script>
+  <script src="admin.js"></script>
+</body>
+
+</html>
