@@ -82,14 +82,33 @@
     // 4. STATE MANAGEMENT
     let selectedBrand = 'ALL';
     let selectedType = 'ALL';
+    let selectedCapacity = 'ALL';
+    let showroomSearch = '';
     let compareList = [];
     let currentSlide = 0;
 
     // Initialize UI on Load
     document.addEventListener('DOMContentLoaded', async () => {
       lucide.createIcons();
+
+      const showroomSearch = document.getElementById('showroom-search');
+      const clearSearch = document.getElementById('clear-showroom-search');
+      if (showroomSearch) {
+        showroomSearch.addEventListener('input', event => {
+          setShowroomSearch(event.target.value);
+        });
+      }
+      if (clearSearch) {
+        clearSearch.addEventListener('click', () => {
+          if (showroomSearch) showroomSearch.value = '';
+          setShowroomSearch('');
+          showroomSearch?.focus();
+        });
+      }
+
       renderBrandFilters();
       renderTypeFilters();
+      renderCapacityFilters();
       renderProducts();
       renderServices();
       initIdleTimer();
@@ -105,6 +124,7 @@
             localStorage.setItem('yrme-products', JSON.stringify(liveProducts));
             renderBrandFilters();
             renderTypeFilters();
+            renderCapacityFilters();
             renderProducts();
           }
         } catch (error) {
@@ -118,6 +138,7 @@
       switchTab('catalog');
       setBrandFilter('ALL');
       setTypeFilter('ALL');
+      setCapacityFilter('ALL');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -155,6 +176,24 @@
       `).join('');
     }
 
+    // RENDER HP/TR CAPACITY FILTERS
+    function renderCapacityFilters() {
+      const capacities = ['ALL', '0.5 HP', '0.6 HP', '0.75 HP', '0.8 HP', '1.0 HP', '1.5 HP', '2.0 HP', '2.5 HP', '3.0 HP', '1.0 TR', '1.5 TR', '2.0 TR', '2.5 TR', '3.0 TR', '5.0 TR'];
+      const container = document.getElementById('capacity-filters');
+      if (!container) return;
+
+      container.innerHTML = capacities.map(capacity => `
+        <button onclick="setCapacityFilter('${capacity}')"
+          class="px-4 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap ${
+            selectedCapacity === capacity
+              ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50'
+              : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
+          }">
+          ${capacity === 'ALL' ? 'All Capacities' : capacity}
+        </button>
+      `).join('');
+    }
+
     // FILTER LOGIC
     function setBrandFilter(brand) {
       selectedBrand = brand;
@@ -165,6 +204,31 @@
     function setTypeFilter(type) {
       selectedType = type;
       renderTypeFilters();
+      renderProducts();
+    }
+
+    function setCapacityFilter(capacity) {
+      selectedCapacity = capacity;
+      renderCapacityFilters();
+      renderProducts();
+    }
+
+    function normalizeCapacity(value) {
+      let text = String(value || '').toUpperCase().replace(/[O]/g, '0').replace(/\s+/g, '').trim();
+      const match = text.match(/^(\d+(?:\.\d+)?)?(HP|TR)$/);
+      if (!match) return '';
+      const number = Number(match[1]);
+      if (!Number.isFinite(number)) return '';
+      return `${number.toFixed(number % 1 === 0 ? 1 : 2).replace(/0$/, '')} ${match[2]}`;
+    }
+
+    function setShowroomSearch(query) {
+      showroomSearch = String(query || '').trim().toLowerCase();
+      const clearButton = document.getElementById('clear-showroom-search');
+      if (clearButton) {
+        clearButton.classList.toggle('hidden', !showroomSearch);
+        clearButton.classList.toggle('flex', Boolean(showroomSearch));
+      }
       renderProducts();
     }
 
@@ -181,7 +245,20 @@
       ).filter(p => {
         const matchBrand = selectedBrand === 'ALL' || p.brand === selectedBrand;
         const matchType = selectedType === 'ALL' || p.type === selectedType;
-        return matchBrand && matchType;
+        const normalizedCapacity = normalizeCapacity(p.hp);
+        const matchCapacity = selectedCapacity === 'ALL' || normalizedCapacity === selectedCapacity;
+        const searchText = [
+          p.brand,
+          p.title,
+          p.hp,
+          p.type,
+          p.gas,
+          p.tech,
+          p.price,
+          p.id
+        ].filter(Boolean).join(' ').toLowerCase();
+        const matchSearch = !showroomSearch || searchText.includes(showroomSearch);
+        return matchBrand && matchType && matchCapacity && matchSearch;
       });
 
       document.getElementById('product-count-label').innerText = `Showing ${filtered.length} Aircon Units`;
